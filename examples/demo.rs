@@ -1,3 +1,14 @@
+//! This app demonstrates:
+//!
+//! - Using ScheduleRunnerPlugin to run the bevy app loop without a window.
+//! - Using the RatatuiContext resource to draw widgets to the terminal.
+//! - Using Events to read input and communicate between systems.
+//!
+//! Keys:
+//! - Left & Right: modify the counter
+//! - Q or Esc: quit
+//! - P: panic (tests the color_eyre panic hooks)
+
 use core::panic;
 use std::time::Duration;
 
@@ -20,21 +31,29 @@ use ratatui::{
 };
 
 fn main() {
-    let frame_rate = Duration::from_secs_f64(1. / 60.);
+    let frame_time = Duration::from_secs_f32(1. / 60.);
+
     App::new()
-        .add_plugins(RatatuiPlugins::default())
-        .add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_rate)))
-        .add_plugins(StatesPlugin)
-        .add_systems(PreUpdate, keyboard_input_system)
-        .add_systems(Update, ui_system.pipe(exit_on_error))
+        .add_plugins((
+            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_time)),
+            RatatuiPlugins::default(),
+            StatesPlugin,
+        ))
+        .init_resource::<BackgroundColor>()
         .init_resource::<Counter>()
-        .add_event::<CounterEvent>()
         .init_state::<AppState>()
-        .add_systems(Update, update_counter_system)
+        .add_event::<CounterEvent>()
+        .add_systems(PreUpdate, keyboard_input_system)
+        .add_systems(
+            Update,
+            (
+                ui_system.pipe(exit_on_error),
+                update_counter_system,
+                background_color_system,
+            ),
+        )
         .add_systems(OnEnter(AppState::Negative), start_background_color_timer)
         .add_systems(OnEnter(AppState::Positive), start_background_color_timer)
-        .add_systems(Update, background_color_system)
-        .init_resource::<BackgroundColor>()
         .run();
 }
 
