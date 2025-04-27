@@ -48,7 +48,7 @@ pub enum InputSet {
 /// them to the `KeyEvent` event.
 pub struct EventPlugin {
     /// Adds an input handler that signals bevy to exit when an interrupt keypress (control+c) is read.
-    control_c_interrupt: bool,
+    pub control_c_interrupt: bool,
 }
 
 impl Default for EventPlugin {
