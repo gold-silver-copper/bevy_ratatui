@@ -127,19 +127,11 @@ pub fn crossterm_event_system(
     mut focus: EventWriter<FocusEvent>,
     mut paste: EventWriter<PasteEvent>,
     mut resize: EventWriter<ResizeEvent>,
-    mut exit: EventWriter<AppExit>,
 ) -> Result {
     while event::poll(Duration::ZERO)? {
         let event = event::read()?;
         match event {
             Key(event) => {
-                if event.kind == KeyEventKind::Press
-                    && event.modifiers == KeyModifiers::CONTROL
-                    && event.code == KeyCode::Char('c')
-                {
-                    exit.write_default();
-                }
-
                 keys.write(KeyEvent(event));
             }
             event::Event::FocusLost => {
