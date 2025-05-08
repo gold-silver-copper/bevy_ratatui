@@ -8,11 +8,16 @@
 use std::io::{self, Stdout, stdout};
 
 use bevy::{app::AppExit, prelude::*};
+#[cfg(not(feature = "soft"))]
 use crossterm::{
     ExecutableCommand, cursor,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::Terminal;
+#[cfg(not(feature = "soft"))]
+use ratatui::backend::CrosstermBackend;
+#[cfg(feature = "soft")]
+use soft_ratatui::SoftBackend;
 
 use crate::{kitty::KittyEnabled, mouse::MouseCaptureEnabled};
 
@@ -56,8 +61,10 @@ pub trait TerminalContext: Sized {
 
 /// Concrete terminal wrapper using Crossterm and Ratatui.
 #[derive(Resource, Deref, DerefMut)]
+#[cfg(not(feature = "soft"))]
 pub struct RatatuiContext(Terminal<CrosstermBackend<Stdout>>);
 
+#[cfg(not(feature = "soft"))]
 impl TerminalContext for RatatuiContext {
     fn init() -> io::Result<Self> {
         let mut stdout = stdout();
@@ -77,7 +84,33 @@ impl TerminalContext for RatatuiContext {
         Ok(())
     }
 }
+#[cfg(not(feature = "soft"))]
+impl Drop for RatatuiContext {
+    fn drop(&mut self) {
+        if let Err(err) = Self::restore() {
+            eprintln!("Failed to restore terminal: {}", err);
+        }
+    }
+}
 
+/// Concrete terminal wrapper using Crossterm and Ratatui.
+#[derive(Resource, Deref, DerefMut)]
+#[cfg(feature = "soft")]
+pub struct RatatuiContext(Terminal<SoftBackend>);
+
+#[cfg(feature = "soft")]
+impl TerminalContext for RatatuiContext {
+    fn init() -> io::Result<Self> {
+        let backend = SoftBackend::new_with_system_fonts(15, 15, 16);
+        let terminal = Terminal::new(backend)?;
+        Ok(RatatuiContext(terminal))
+    }
+
+    fn restore() -> io::Result<()> {
+        Ok(())
+    }
+}
+#[cfg(feature = "soft")]
 impl Drop for RatatuiContext {
     fn drop(&mut self) {
         if let Err(err) = Self::restore() {
