@@ -67,7 +67,23 @@ pub trait TerminalContext: Sized {
     fn restore() -> io::Result<()>;
 }
 
-/// Concrete terminal wrapper using Crossterm and Ratatui.
+/// A wrapper around ratatui::Terminal that automatically enters and leaves the alternate screen.
+///
+/// This resource is used to draw to the terminal. It automatically enters the alternate screen when
+/// it is initialized, and leaves the alternate screen when it is dropped.
+///
+/// # Example
+///
+/// ```rust
+/// use bevy::prelude::*;
+/// use bevy_ratatui::terminal::RatatuiContext;
+///
+/// fn draw_system(mut context: ResMut<RatatuiContext>) {
+///     context.draw(|frame| {
+///         // Draw widgets etc. to the terminal
+///     });
+/// }
+/// ```
 #[derive(Resource, Deref, DerefMut)]
 #[cfg(not(feature = "soft"))]
 pub struct RatatuiContext(Terminal<CrosstermBackend<Stdout>>);
