@@ -1,6 +1,8 @@
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{error, event, input_forwarding, kitty, mouse, terminal};
+use crate::{error, kitty, mouse, terminal};
+#[cfg(not(feature = "soft"))]
+use crate::{event, input_forwarding};
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
@@ -45,14 +47,20 @@ impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
         let mut builder = PluginGroupBuilder::start::<Self>()
             .add(error::ErrorPlugin)
-            .add(terminal::TerminalPlugin)
-            .add(event::EventPlugin::default());
+            .add(terminal::TerminalPlugin);
+
+        #[cfg(not(feature = "soft"))]
+        {
+            builder = builder.add(event::EventPlugin::default());
+        }
+
         if self.enable_kitty_protocol {
             builder = builder.add(kitty::KittyPlugin);
         }
         if self.enable_mouse_capture {
             builder = builder.add(mouse::MousePlugin);
         }
+        #[cfg(not(feature = "soft"))]
         if self.enable_input_forwarding {
             builder = builder.add(input_forwarding::KeyboardPlugin);
         }
