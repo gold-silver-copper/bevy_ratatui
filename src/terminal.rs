@@ -12,7 +12,7 @@ use crossterm::{
     ExecutableCommand, cursor,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::backend::CrosstermBackend;
+use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::{kitty::KittyEnabled, mouse::MouseCaptureEnabled};
 
@@ -45,39 +45,32 @@ pub fn cleanup_system(mut commands: Commands, mut exit_reader: EventReader<AppEx
     }
 }
 
-/// A wrapper around ratatui::Terminal that automatically enters and leaves the alternate screen.
-///
-/// This resource is used to draw to the terminal. It automatically enters the alternate screen when
-/// it is initialized, and leaves the alternate screen when it is dropped.
-///
-/// # Example
-///
-/// ```rust
-/// use bevy::prelude::*;
-/// use bevy_ratatui::terminal::RatatuiContext;
-///
-/// fn draw_system(mut context: ResMut<RatatuiContext>) {
-///     context.draw(|frame| {
-///         // Draw widgets etc. to the terminal
-///     });
-/// }
-/// ```
-#[derive(Resource, Deref, DerefMut)]
-pub struct RatatuiContext(ratatui::Terminal<CrosstermBackend<Stdout>>);
+/// Trait for terminal context lifecycle.
+pub trait TerminalContext: Sized {
+    /// Initializes the terminal and enters raw mode.
+    fn init() -> io::Result<Self>;
 
-impl RatatuiContext {
-    /// Initializes the terminal, entering the alternate screen and enabling raw mode.
-    pub fn init() -> io::Result<Self> {
-        stdout().execute(EnterAlternateScreen)?;
+    /// Restores the terminal to its normal state.
+    fn restore() -> io::Result<()>;
+}
+
+/// Concrete terminal wrapper using Crossterm and Ratatui.
+#[derive(Resource, Deref, DerefMut)]
+pub struct RatatuiContext(Terminal<CrosstermBackend<Stdout>>);
+
+impl TerminalContext for RatatuiContext {
+    fn init() -> io::Result<Self> {
+        let mut stdout = stdout();
+        stdout.execute(EnterAlternateScreen)?;
         enable_raw_mode()?;
-        let backend = CrosstermBackend::new(stdout());
-        let terminal = ratatui::Terminal::new(backend)?;
+        let backend = CrosstermBackend::new(stdout);
+        let terminal = Terminal::new(backend)?;
         Ok(RatatuiContext(terminal))
     }
 
-    /// Restores the terminal, leaving the alternate screen and disabling raw mode.
-    pub fn restore() -> io::Result<()> {
-        stdout()
+    fn restore() -> io::Result<()> {
+        let mut stdout = stdout();
+        stdout
             .execute(LeaveAlternateScreen)?
             .execute(cursor::Show)?;
         disable_raw_mode()?;
@@ -85,12 +78,9 @@ impl RatatuiContext {
     }
 }
 
-/// Restores the terminal when the app is dropped.
-///
-/// Any errors that occur when restoring the terminal are logged and ignored.
 impl Drop for RatatuiContext {
     fn drop(&mut self) {
-        if let Err(err) = RatatuiContext::restore() {
+        if let Err(err) = Self::restore() {
             eprintln!("Failed to restore terminal: {}", err);
         }
     }
