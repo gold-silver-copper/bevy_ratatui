@@ -2,6 +2,7 @@
 use std::io::{self, stdout};
 
 use bevy::prelude::*;
+#[cfg(not(feature = "soft"))]
 use crossterm::{
     ExecutableCommand,
     event::{KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags},
@@ -44,6 +45,7 @@ impl Drop for KittyEnabled {
 ///
 /// [kitty keyboard protocol]: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 pub fn enable_kitty_protocol() -> io::Result<()> {
+    #[cfg(not(feature = "soft"))]
     if supports_keyboard_enhancement()? {
         stdout().execute(PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::all()))?;
         return Ok(());
@@ -58,6 +60,7 @@ pub fn enable_kitty_protocol() -> io::Result<()> {
 ///
 /// [kitty keyboard protocol]: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 pub fn disable_kitty_protocol() -> io::Result<()> {
+    #[cfg(not(feature = "soft"))]
     stdout().execute(PopKeyboardEnhancementFlags)?;
     Ok(())
 }
