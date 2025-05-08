@@ -33,7 +33,7 @@ opt-level = 1
 opt-level = 3
 
 [features]
-default = ["std", "async_executor", "soft"]
+default = ["std", "async_executor"]
 soft = ["dep:soft_ratatui", "bevy/default"]
 
 # Features for `std` platforms
