@@ -53,6 +53,10 @@ impl PluginGroup for RatatuiPlugins {
         {
             builder = builder.add(event::EventPlugin::default());
         }
+        #[cfg(feature = "soft")]
+        {
+            builder = builder.add(terminal::SoftRender);
+        }
 
         if self.enable_kitty_protocol {
             builder = builder.add(kitty::KittyPlugin);
