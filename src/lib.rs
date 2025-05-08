@@ -56,7 +56,9 @@
 //! [examples]: https://github.com/cxreiff/bevy_ratatui/tree/main/examples
 
 pub mod error;
+#[cfg(not(feature = "soft"))]
 pub mod event;
+#[cfg(not(feature = "soft"))]
 pub mod input_forwarding;
 pub mod kitty;
 pub mod mouse;
