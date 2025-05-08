@@ -7,7 +7,7 @@
 //! and leaves the alternate screen.
 use std::io::{self, Stdout, stdout};
 
-use bevy::{app::AppExit, prelude::*};
+use bevy::{app::AppExit, prelude::*, text::DEFAULT_FONT_DATA};
 
 #[cfg(feature = "soft")]
 use bevy::{
@@ -128,7 +128,7 @@ pub struct RatatuiContext(Terminal<SoftBackend>);
 #[cfg(feature = "soft")]
 impl TerminalContext for RatatuiContext {
     fn init() -> io::Result<Self> {
-        let backend = SoftBackend::new_with_system_fonts(15, 15, 16);
+        let backend = SoftBackend::new_with_font(15, 15, 16, DEFAULT_FONT_DATA);
         let terminal = Terminal::new(backend)?;
         Ok(RatatuiContext(terminal))
     }
