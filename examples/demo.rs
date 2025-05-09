@@ -33,8 +33,14 @@ fn main() {
 
     App::new()
         .add_plugins((
+            #[cfg(not(feature = "windowed"))]
             MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_time)),
-            RatatuiPlugins::default(),
+            #[cfg(feature = "windowed")]
+            DefaultPlugins,
+            RatatuiPlugins {
+                enable_input_forwarding: true,
+                ..default()
+            },
             StatesPlugin,
         ))
         .init_resource::<BackgroundColor>()
