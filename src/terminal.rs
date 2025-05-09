@@ -9,7 +9,7 @@ use std::io::{self, Stdout, stdout};
 
 use bevy::{app::AppExit, prelude::*};
 
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 use bevy::{
     asset::RenderAssetUsages,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
@@ -23,7 +23,7 @@ use crossterm::{
 use ratatui::Terminal;
 
 use ratatui::backend::CrosstermBackend;
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 use soft_ratatui::SoftBackend;
 
 use crate::{kitty::KittyEnabled, mouse::MouseCaptureEnabled};
@@ -84,10 +84,10 @@ pub trait TerminalContext: Sized {
 /// }
 /// ```
 #[derive(Resource, Deref, DerefMut)]
-#[cfg(not(feature = "soft"))]
+#[cfg(not(feature = "windowed"))]
 pub struct RatatuiContext(Terminal<CrosstermBackend<Stdout>>);
 
-#[cfg(not(feature = "soft"))]
+#[cfg(not(feature = "windowed"))]
 impl TerminalContext for RatatuiContext {
     fn init() -> io::Result<Self> {
         let mut stdout = stdout();
@@ -107,7 +107,7 @@ impl TerminalContext for RatatuiContext {
         Ok(())
     }
 }
-#[cfg(not(feature = "soft"))]
+#[cfg(not(feature = "windowed"))]
 impl Drop for RatatuiContext {
     fn drop(&mut self) {
         if let Err(err) = Self::restore() {
@@ -115,16 +115,16 @@ impl Drop for RatatuiContext {
         }
     }
 }
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 #[derive(Resource)]
 struct TerminalRender(Handle<Image>);
 
 /// Concrete terminal wrapper using Crossterm and Ratatui.
 #[derive(Resource, Deref, DerefMut)]
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 pub struct RatatuiContext(Terminal<SoftBackend>);
 
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 impl TerminalContext for RatatuiContext {
     fn init() -> io::Result<Self> {
         let backend = SoftBackend::new_with_system_fonts(15, 15, 16);
@@ -136,7 +136,7 @@ impl TerminalContext for RatatuiContext {
         Ok(())
     }
 }
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 impl Drop for RatatuiContext {
     fn drop(&mut self) {
         if let Err(err) = Self::restore() {
@@ -145,9 +145,9 @@ impl Drop for RatatuiContext {
     }
 }
 
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 pub struct SoftRender;
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 impl Plugin for SoftRender {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, terminal_render_setup)
@@ -157,7 +157,7 @@ impl Plugin for SoftRender {
 }
 
 /// A startup system that sets up the terminal.
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 pub fn terminal_render_setup(
     mut commands: Commands,
     softatui: ResMut<RatatuiContext>,
@@ -186,7 +186,7 @@ pub fn terminal_render_setup(
     Ok(())
 }
 
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 fn render_terminal_to_handle(
     softatui: ResMut<RatatuiContext>,
     mut images: ResMut<Assets<Image>>,
@@ -212,7 +212,7 @@ fn render_terminal_to_handle(
 }
 
 /// System that reacts to window resize
-#[cfg(feature = "soft")]
+#[cfg(feature = "windowed")]
 fn handle_resize_events(
     mut resize_reader: EventReader<WindowResized>,
     mut softatui: ResMut<RatatuiContext>,
