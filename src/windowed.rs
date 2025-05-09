@@ -85,7 +85,8 @@ fn render_terminal_to_handle(
     let height = softatui.backend().get_pixmap_height() as u32;
     let data = softatui.backend().get_pixmap_data_as_rgba();
 
-    let imageik = Image::new(
+    let image = images.get_mut(&my_handle.0).expect("Image not found");
+    *image = Image::new(
         Extent3d {
             width,
             height,
@@ -96,8 +97,6 @@ fn render_terminal_to_handle(
         TextureFormat::Rgba8Unorm,
         RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
     );
-    let image = images.get_mut(&my_handle.0).expect("Image not found");
-    *image = imageik;
 }
 
 /// System that reacts to window resize
