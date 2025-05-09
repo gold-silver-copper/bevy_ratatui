@@ -47,11 +47,9 @@ impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
         let mut builder = PluginGroupBuilder::start::<Self>()
             .add(error::ErrorPlugin)
-            .add(terminal::TerminalPlugin);
+            .add(terminal::TerminalPlugin)
+            .add(event::EventPlugin::default());
 
-        {
-            builder = builder.add(event::EventPlugin::default());
-        }
         #[cfg(feature = "windowed")]
         {
             builder = builder.add(windowed::SoftRender);
