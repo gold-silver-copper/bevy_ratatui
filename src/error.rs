@@ -48,7 +48,7 @@ pub fn setup() -> Result {
 fn set_panic_hook(panic_hook: PanicHook) {
     let panic_hook = panic_hook.into_panic_hook();
     panic::set_hook(Box::new(move |panic_info| {
-        let _ = RatatuiContext::restore();
+        let _ = RatatuiContext::default_restore();
         panic_hook(panic_info);
     }));
 }
@@ -57,7 +57,7 @@ fn set_panic_hook(panic_hook: PanicHook) {
 fn set_error_hook(eyre_hook: EyreHook) -> Result {
     let eyre_hook = eyre_hook.into_eyre_hook();
     eyre::set_hook(Box::new(move |error| {
-        let _ = RatatuiContext::restore();
+        let _ = RatatuiContext::default_restore();
         eyre_hook(error)
     }))?;
 

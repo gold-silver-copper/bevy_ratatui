@@ -19,6 +19,7 @@ pub struct RatatuiPlugins {
     pub enable_mouse_capture: bool,
     /// Forwards terminal input events to the bevy input system if enabled.
     pub enable_input_forwarding: bool,
+    pub windowed: bool,
 }
 
 impl Default for RatatuiPlugins {
@@ -27,6 +28,18 @@ impl Default for RatatuiPlugins {
             enable_kitty_protocol: true,
             enable_mouse_capture: false,
             enable_input_forwarding: false,
+            windowed: false,
+        }
+    }
+}
+
+impl RatatuiPlugins {
+    fn windowed() -> Self {
+        Self {
+            enable_kitty_protocol: false,
+            enable_mouse_capture: false,
+            enable_input_forwarding: true,
+            windowed: true,
         }
     }
 }

@@ -12,7 +12,8 @@ use crossterm::{
     ExecutableCommand, cursor,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::backend::CrosstermBackend;
+use ratatui::{Terminal, backend::CrosstermBackend, prelude::Backend};
+use soft_ratatui::SoftBackend;
 
 use crate::{kitty::KittyEnabled, mouse::MouseCaptureEnabled};
 
@@ -31,7 +32,7 @@ impl Plugin for TerminalPlugin {
 
 /// A startup system that sets up the terminal.
 pub fn setup(mut commands: Commands) -> Result {
-    let terminal = RatatuiContext::init()?;
+    let terminal = RatatuiContext::default_init()?;
     commands.insert_resource(terminal);
     Ok(())
 }
@@ -62,36 +63,85 @@ pub fn cleanup_system(mut commands: Commands, mut exit_reader: EventReader<AppEx
 ///     });
 /// }
 /// ```
-#[derive(Resource, Deref, DerefMut)]
-pub struct RatatuiContext(ratatui::Terminal<CrosstermBackend<Stdout>>);
 
-impl RatatuiContext {
-    /// Initializes the terminal, entering the alternate screen and enabling raw mode.
-    pub fn init() -> io::Result<Self> {
-        stdout().execute(EnterAlternateScreen)?;
+/// Trait for backend lifecycle management (init/restore).
+pub trait TerminalBackendStrategy {
+    type Backend: Backend;
+
+    fn init_terminal() -> io::Result<Terminal<Self::Backend>>;
+    fn restore_terminal() -> io::Result<()>;
+}
+
+/// The default Crossterm terminal backend strategy.
+pub struct CrosstermStrategy;
+
+impl TerminalBackendStrategy for CrosstermStrategy {
+    type Backend = CrosstermBackend<Stdout>;
+
+    fn init_terminal() -> io::Result<Terminal<Self::Backend>> {
+        let mut stdout = io::stdout();
+        stdout.execute(EnterAlternateScreen)?;
         enable_raw_mode()?;
-        let backend = CrosstermBackend::new(stdout());
-        let terminal = ratatui::Terminal::new(backend)?;
-        Ok(RatatuiContext(terminal))
+        let backend = CrosstermBackend::new(stdout);
+        Terminal::new(backend)
     }
 
-    /// Restores the terminal, leaving the alternate screen and disabling raw mode.
-    pub fn restore() -> io::Result<()> {
-        stdout()
-            .execute(LeaveAlternateScreen)?
-            .execute(cursor::Show)?;
-        disable_raw_mode()?;
-        Ok(())
+    fn restore_terminal() -> io::Result<()> {
+        let mut stdout = io::stdout();
+        stdout.execute(LeaveAlternateScreen)?;
+        disable_raw_mode()
     }
 }
 
-/// Restores the terminal when the app is dropped.
+/// Generic terminal context used in Bevy systems.
 ///
-/// Any errors that occur when restoring the terminal are logged and ignored.
-impl Drop for RatatuiContext {
+/// Defaults to `CrosstermStrategy`, so users can write just `RatatuiContext`.
+#[derive(Resource, Deref, DerefMut)]
+pub struct RatatuiContext<S: TerminalBackendStrategy = CrosstermStrategy> {
+    terminal: Terminal<S::Backend>,
+}
+
+impl<S: TerminalBackendStrategy> RatatuiContext<S> {
+    /// Initializes the terminal using the selected strategy.
+    pub fn init() -> io::Result<Self> {
+        let terminal = S::init_terminal()?;
+        Ok(Self { terminal })
+    }
+
+    /// Restores the terminal using the selected strategy.
+    pub fn restore() -> io::Result<()> {
+        S::restore_terminal()
+    }
+}
+
+impl<S: TerminalBackendStrategy> Drop for RatatuiContext<S> {
     fn drop(&mut self) {
-        if let Err(err) = RatatuiContext::restore() {
+        if let Err(err) = Self::restore() {
             eprintln!("Failed to restore terminal: {}", err);
         }
+    }
+}
+
+impl RatatuiContext {
+    pub fn default_init() -> io::Result<Self> {
+        Self::init()
+    }
+    pub fn default_restore() -> io::Result<()> {
+        Self::restore()
+    }
+}
+
+pub struct WindowedStrategy;
+
+impl TerminalBackendStrategy for WindowedStrategy {
+    type Backend = SoftBackend;
+
+    fn init_terminal() -> io::Result<Terminal<Self::Backend>> {
+        let backend = SoftBackend::new_with_system_fonts(10, 10, 16);
+        Terminal::new(backend)
+    }
+
+    fn restore_terminal() -> io::Result<()> {
+        Ok(())
     }
 }
