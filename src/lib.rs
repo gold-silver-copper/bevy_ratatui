@@ -62,5 +62,7 @@ pub mod kitty;
 pub mod mouse;
 mod ratatui;
 pub mod terminal;
+#[cfg(feature = "windowed")]
+pub mod windowed;
 
 pub use ratatui::RatatuiPlugins;

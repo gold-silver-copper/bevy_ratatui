@@ -18,7 +18,7 @@ use bevy::{
     prelude::*,
     state::app::StatesPlugin,
 };
-use bevy_ratatui::{RatatuiPlugins, event::KeyEvent, terminal::RatatuiContext};
+use bevy_ratatui::{RatatuiPlugins, terminal::RatatuiContext};
 
 use ratatui::{
     buffer::Buffer,
@@ -33,16 +33,16 @@ fn main() {
 
     App::new()
         .add_plugins((
-            RatatuiPlugins {
-                enable_input_forwarding: true,
-                ..default()
-            },
             #[cfg(not(feature = "windowed"))]
             MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_time)),
             #[cfg(not(feature = "windowed"))]
             StatesPlugin,
             #[cfg(feature = "windowed")]
             DefaultPlugins,
+            RatatuiPlugins {
+                enable_input_forwarding: true,
+                ..default()
+            },
         ))
         .init_resource::<BackgroundColor>()
         .init_resource::<Counter>()
