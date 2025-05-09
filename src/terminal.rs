@@ -9,13 +9,6 @@ use std::io::{self, Stdout, stdout};
 
 use bevy::{app::AppExit, prelude::*};
 
-#[cfg(feature = "windowed")]
-use bevy::{
-    asset::RenderAssetUsages,
-    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
-    window::WindowResized,
-};
-
 use crossterm::{
     ExecutableCommand, cursor,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
@@ -23,8 +16,6 @@ use crossterm::{
 use ratatui::Terminal;
 
 use ratatui::backend::CrosstermBackend;
-#[cfg(feature = "windowed")]
-use soft_ratatui::SoftBackend;
 
 use crate::{kitty::KittyEnabled, mouse::MouseCaptureEnabled};
 
