@@ -3955,7 +3955,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.4.15",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4164,9 +4164,9 @@ dependencies = [
 
 [[package]]
 name = "soft_ratatui"
-version = "0.0.2"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8546c42a70475760ab7b5e8098495fdb7c33369c5bb261ff09ed05a4f633b74f"
+checksum = "cc09d84d7266319a84255142563d5c295d887cff6a3d97eac8b359e421c30dc7"
 dependencies = [
  "cosmic-text 0.14.2",
  "ratatui",
