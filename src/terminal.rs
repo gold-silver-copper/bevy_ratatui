@@ -16,13 +16,12 @@ use bevy::{
     window::WindowResized,
 };
 
-#[cfg(not(feature = "soft"))]
 use crossterm::{
     ExecutableCommand, cursor,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::Terminal;
-#[cfg(not(feature = "soft"))]
+
 use ratatui::backend::CrosstermBackend;
 #[cfg(feature = "soft")]
 use soft_ratatui::SoftBackend;
