@@ -17,6 +17,7 @@ color-eyre = "0.6.3"
 crossterm = "0.29.0"
 ratatui = { version = "0.29.0", features = ["unstable-widget-ref"] }
 smol_str = "0.2.2"
+soft_ratatui = { version = "0.0.4", optional = true }
 tracing = "0.1.41"
 
 [dev-dependencies]
@@ -33,6 +34,7 @@ opt-level = 3
 
 [features]
 default = ["std", "async_executor"]
+windowed = ["dep:soft_ratatui", "bevy/default"]
 
 # Features for `std` platforms
 std = ["bevy/std"]
