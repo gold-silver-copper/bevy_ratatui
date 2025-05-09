@@ -52,7 +52,7 @@ impl PluginGroup for RatatuiPlugins {
         {
             builder = builder.add(event::EventPlugin::default());
         }
-        #[cfg(feature = "soft")]
+        #[cfg(feature = "windowed")]
         {
             builder = builder.add(terminal::SoftRender);
         }
