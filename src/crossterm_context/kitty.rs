@@ -2,24 +2,23 @@
 use std::io::{self, stdout};
 
 use bevy::prelude::*;
-
 use crossterm::{
     ExecutableCommand,
     event::{KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags},
     terminal::supports_keyboard_enhancement,
 };
 
-use crate::terminal;
+use crate::plugins::context_setup;
 
 pub struct KittyPlugin;
 
 impl Plugin for KittyPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup.after(terminal::setup));
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(Startup, kitty_setup.after(context_setup));
     }
 }
 
-fn setup(mut commands: Commands) {
+fn kitty_setup(mut commands: Commands) {
     if enable_kitty_protocol().is_ok() {
         commands.insert_resource(KittyEnabled);
     }

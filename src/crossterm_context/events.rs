@@ -27,25 +27,10 @@ use bevy::{app::AppExit, prelude::*};
 use crossterm::event::{self, Event::Key, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::Size;
 
-/// InputSet defines when the input events are emitted.
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum InputSet {
-    /// Run before any input events are emitted.
-    Pre,
-    /// Emit the crossterm events.
-    EmitCrossterm,
-    /// Check for emulation
-    CheckEmulation,
-    /// Emit the bevy events if [crate::input_forwarding::KeyboardPlugin] has been added.
-    EmitBevy,
-    /// Run after all input events are emitted.
-    Post,
-}
-
 /// A plugin for handling events.
 ///
-/// This plugin adds the `KeyEvent` event, and a system that reads events from crossterm and sends
-/// them to the `KeyEvent` event.
+/// This plugin reads events from the terminal environment and forwards them to Bevy using the
+/// `KeyEvent` event.
 pub struct EventPlugin {
     /// Adds an input handler that signals bevy to exit when an interrupt keypress (control+c) is read.
     pub control_c_interrupt: bool,
@@ -60,7 +45,7 @@ impl Default for EventPlugin {
 }
 
 impl Plugin for EventPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, app: &mut bevy::prelude::App) {
         app.add_event::<KeyEvent>()
             .add_event::<MouseEvent>()
             .add_event::<FocusEvent>()
@@ -87,6 +72,21 @@ impl Plugin for EventPlugin {
             app.add_systems(Update, control_c_interrupt_system.in_set(InputSet::Post));
         }
     }
+}
+
+/// InputSet defines when the input events are emitted.
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum InputSet {
+    /// Run before any input events are emitted.
+    Pre,
+    /// Emit the crossterm events.
+    EmitCrossterm,
+    /// Check for emulation
+    CheckEmulation,
+    /// Emit the bevy events if [crate::input_forwarding::KeyboardPlugin] has been added.
+    EmitBevy,
+    /// Run after all input events are emitted.
+    Post,
 }
 
 /// An event that is sent whenever an event is read from crossterm.

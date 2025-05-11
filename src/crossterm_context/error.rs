@@ -5,14 +5,14 @@
 //! This ensures that the error message is not messed up by the terminal state.
 use std::panic;
 
-use bevy::{app::AppExit, prelude::*};
+use bevy::prelude::*;
 use color_eyre::{
     self,
     config::{EyreHook, HookBuilder, PanicHook},
     eyre,
 };
 
-use crate::terminal::{RatatuiContext, TerminalContext};
+use crate::RatatuiContext;
 
 /// A plugin that sets up error handling.
 ///
@@ -21,13 +21,9 @@ use crate::terminal::{RatatuiContext, TerminalContext};
 /// terminal state.
 pub struct ErrorPlugin;
 
-/// A system that sets up error handling.
-///
-/// This system sets up hooks for panic and error handling. It is used to ensure that the terminal
-/// is restored before printing the panic or error message.
 impl Plugin for ErrorPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(Startup, error_setup);
     }
 }
 
@@ -36,7 +32,7 @@ impl Plugin for ErrorPlugin {
 /// Makes the app resilient to panics and errors by restoring the terminal before printing the
 /// panic or error message. This prevents error messages from being messed up by the terminal
 /// state.
-pub fn setup() -> Result {
+pub fn error_setup() -> Result {
     let (panic_hook, eyre_hook) = HookBuilder::default().into_hooks();
     set_panic_hook(panic_hook);
     set_error_hook(eyre_hook)?;
@@ -62,19 +58,4 @@ fn set_error_hook(eyre_hook: EyreHook) -> Result {
     }))?;
 
     Ok(())
-}
-
-/// Exits the app if an error occurs.
-///
-/// This is used to pipe results from functions that return `Result` to the `exit_on_error` system.
-/// If the result is an error, the error is logged and the app is exited.
-#[deprecated(
-    since = "0.8.0",
-    note = "bevy now allows returning the catch-all `bevy::prelude::Result` from systems, so piping is no longer necessary"
-)]
-pub fn exit_on_error(In(result): In<Result<()>>, mut app_exit: EventWriter<AppExit>) {
-    if let Err(err) = result {
-        tracing::error!("Error: {:?}", err);
-        app_exit.write_default();
-    }
 }

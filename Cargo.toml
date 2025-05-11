@@ -14,7 +14,7 @@ keywords = ["cli", "ratatui", "terminal", "tui", "bevy"]
 bevy = { version = "0.16", default-features = false }
 bitflags = "2.8.0"
 color-eyre = "0.6.3"
-crossterm = { version = "0.29.0" }
+crossterm = "0.29.0"
 ratatui = { version = "0.29.0", features = ["unstable-widget-ref"] }
 smol_str = "0.2.2"
 soft_ratatui = { version = "0.0.7", optional = true }
