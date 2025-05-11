@@ -2,7 +2,6 @@
 use std::io::stdout;
 
 use bevy::prelude::*;
-
 use crossterm::{
     ExecutableCommand,
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -11,21 +10,21 @@ use crossterm::{
 pub struct MousePlugin;
 
 impl Plugin for MousePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(Startup, mouse_setup);
     }
 }
 
 #[derive(Resource, Default)]
-pub struct MouseCaptureEnabled;
+pub struct MouseEnabled;
 
-fn setup(mut commands: Commands) -> Result {
+fn mouse_setup(mut commands: Commands) -> Result {
     stdout().execute(EnableMouseCapture)?;
-    commands.insert_resource(MouseCaptureEnabled);
+    commands.insert_resource(MouseEnabled);
     Ok(())
 }
 
-impl Drop for MouseCaptureEnabled {
+impl Drop for MouseEnabled {
     fn drop(&mut self) {
         let _ = stdout().execute(DisableMouseCapture);
     }

@@ -55,16 +55,18 @@
 //! [Ratatui]: https://ratatui.rs
 //! [examples]: https://github.com/cxreiff/bevy_ratatui/tree/main/examples
 
-#[cfg(not(feature = "windowed"))]
-pub mod crossterm;
-pub mod error;
-pub mod event;
-pub mod input_forwarding;
-pub mod kitty;
-pub mod mouse;
-mod ratatui;
-pub mod terminal;
+mod context_trait;
+mod crossterm_context;
+mod plugins;
+mod ratatui_context;
 #[cfg(feature = "windowed")]
-pub mod windowed;
+mod windowed_context;
 
-pub use ratatui::RatatuiPlugins;
+pub use context_trait::TerminalContext;
+pub use crossterm_context::context::CrosstermContext;
+pub use crossterm_context::events::KeyEvent;
+pub use crossterm_context::translation::*;
+pub use plugins::RatatuiPlugins;
+pub use ratatui_context::RatatuiContext;
+#[cfg(feature = "windowed")]
+pub use windowed_context::context::WindowedContext;

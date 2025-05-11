@@ -13,7 +13,48 @@ use bevy::{
 use crossterm::event::KeyModifiers;
 use smol_str::SmolStr;
 
-use crate::event::{InputSet, KeyEvent};
+use crate::crossterm_context::events::{InputSet, KeyEvent};
+
+pub struct TranslationPlugin;
+
+impl Plugin for TranslationPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        if !app.is_plugin_added::<bevy::input::InputPlugin>() {
+            // We need this plugin to submit our events.
+            app.add_plugins(bevy::input::InputPlugin);
+        }
+        if !app.is_plugin_added::<bevy::time::TimePlugin>() {
+            // We need this plugin for the delay timer.
+            app.add_plugins(bevy::time::TimePlugin);
+        }
+        app.init_resource::<ReleaseKey>()
+            .init_resource::<Detected>()
+            .init_resource::<EmulationPolicy>()
+            .init_resource::<Emulate>()
+            .add_systems(Startup, setup_window)
+            .add_systems(
+                PreUpdate,
+                reset_emulation_check
+                    .run_if(resource_changed::<EmulationPolicy>)
+                    .in_set(InputSet::Pre),
+            )
+            .add_systems(
+                PreUpdate,
+                (detect_capabilities, check_for_emulation)
+                    .chain()
+                    .run_if(resource_exists::<Emulate>)
+                    .in_set(InputSet::CheckEmulation),
+            )
+            .add_systems(
+                PreUpdate,
+                (
+                    send_key_events_with_emulation.run_if(resource_exists::<Emulate>),
+                    send_key_events_no_emulation.run_if(not(resource_exists::<Emulate>)),
+                )
+                    .in_set(InputSet::EmitBevy),
+            );
+    }
+}
 
 bitflags::bitflags! {
     /// Crudely defines some capabilities of terminal. Useful for representing
@@ -500,7 +541,7 @@ fn key_event_to_bevy(
 
     // Using `into()` here because a String or a SmolStr are required depending on the enabled bevy
     // features.
-    #[warn(clippy::useless_conversion)]
+    #[allow(clippy::useless_conversion)]
     let text = logical_key
         .as_ref()
         .and_then(logical_key_to_text)

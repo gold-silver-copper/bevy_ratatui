@@ -10,16 +10,17 @@
 //! - P: panic (tests the color_eyre panic hooks)
 
 use core::panic;
+#[cfg(not(feature = "windowed"))]
 use std::time::Duration;
 
-use bevy::{
-    app::{AppExit, ScheduleRunnerPlugin},
-    diagnostic::FrameCount,
-    prelude::*,
-    state::app::StatesPlugin,
-};
-use bevy_ratatui::{RatatuiPlugins, terminal::RatatuiContext};
-
+use bevy::{app::AppExit, diagnostic::FrameCount, prelude::*};
+#[cfg(not(feature = "windowed"))]
+use bevy::{app::ScheduleRunnerPlugin, state::app::StatesPlugin};
+#[cfg(not(feature = "windowed"))]
+use bevy_ratatui::KeyEvent;
+use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
+#[cfg(not(feature = "windowed"))]
+use crossterm::event::KeyEventKind;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -29,26 +30,32 @@ use ratatui::{
 };
 
 fn main() {
-    let frame_time = Duration::from_secs_f32(1. / 60.);
+    let mut app = App::new();
 
-    App::new()
-        .add_plugins((
-            #[cfg(not(feature = "windowed"))]
-            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_time)),
-            #[cfg(not(feature = "windowed"))]
-            StatesPlugin,
-            #[cfg(feature = "windowed")]
-            DefaultPlugins,
-            RatatuiPlugins {
-                enable_input_forwarding: true,
-                ..default()
-            },
-        ))
-        .init_resource::<BackgroundColor>()
+    #[cfg(not(feature = "windowed"))]
+    app.add_plugins((
+        MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(
+            1. / 60.,
+        ))),
+        StatesPlugin,
+        RatatuiPlugins::default(),
+    ))
+    .add_systems(PreUpdate, keyboard_input_system);
+
+    #[cfg(feature = "windowed")]
+    app.add_plugins((
+        DefaultPlugins,
+        RatatuiPlugins {
+            enable_input_forwarding: true,
+            ..default()
+        },
+    ))
+    .add_systems(PreUpdate, keyboard_input_system_windowed);
+
+    app.init_resource::<BackgroundColor>()
         .init_resource::<Counter>()
         .init_state::<AppState>()
         .add_event::<CounterEvent>()
-        .add_systems(PreUpdate, keyboard_input_system)
         .add_systems(
             Update,
             (ui_system, update_counter_system, background_color_system),
@@ -77,15 +84,46 @@ fn ui_system(
     Ok(())
 }
 
+#[cfg(not(feature = "windowed"))]
 fn keyboard_input_system(
+    mut events: EventReader<KeyEvent>,
+    mut app_exit: EventWriter<AppExit>,
+    mut counter_events: EventWriter<CounterEvent>,
+) {
+    use crossterm::event::KeyCode;
+    for event in events.read() {
+        if let KeyEventKind::Release = event.kind {
+            continue;
+        }
+
+        match event.code {
+            KeyCode::Char('q') | KeyCode::Esc => {
+                app_exit.write_default();
+            }
+            KeyCode::Char('p') => {
+                panic!("Panic!");
+            }
+            KeyCode::Left => {
+                counter_events.write(CounterEvent::Decrement);
+            }
+            KeyCode::Right => {
+                counter_events.write(CounterEvent::Increment);
+            }
+            _ => {}
+        }
+    }
+}
+
+#[cfg(feature = "windowed")]
+fn keyboard_input_system_windowed(
     keys: Res<ButtonInput<KeyCode>>,
     mut app_exit: EventWriter<AppExit>,
     mut counter_events: EventWriter<CounterEvent>,
 ) {
-    if keys.pressed(KeyCode::KeyQ) {
+    if keys.just_pressed(KeyCode::KeyQ) {
         app_exit.write_default();
     }
-    if keys.pressed(KeyCode::KeyP) {
+    if keys.just_pressed(KeyCode::KeyP) {
         panic!("Panic!");
     }
     if keys.pressed(KeyCode::ArrowLeft) {

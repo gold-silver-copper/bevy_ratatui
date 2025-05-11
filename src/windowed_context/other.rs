@@ -1,51 +1,24 @@
-use std::io::{self, Stdout, stdout};
-
-use bevy::{app::AppExit, prelude::*};
-
 use bevy::{
     asset::RenderAssetUsages,
+    prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
     window::WindowResized,
 };
 
-use ratatui::Terminal;
+use crate::RatatuiContext;
 
-use soft_ratatui::SoftBackend;
+pub struct SoftRenderPlugin;
 
-use crate::terminal::*;
-
-#[derive(Resource)]
-struct TerminalRender(Handle<Image>);
-
-impl TerminalContext for RatatuiContext {
-    fn init() -> io::Result<Self> {
-        let backend = SoftBackend::new_with_system_fonts(15, 15, 16);
-        let terminal = Terminal::new(backend)?;
-        Ok(RatatuiContext(terminal))
-    }
-
-    fn restore() -> io::Result<()> {
-        Ok(())
-    }
-}
-
-impl Drop for RatatuiContext {
-    fn drop(&mut self) {
-        if let Err(err) = Self::restore() {
-            eprintln!("Failed to restore terminal: {}", err);
-        }
-    }
-}
-
-pub struct SoftRender;
-
-impl Plugin for SoftRender {
+impl Plugin for SoftRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, terminal_render_setup)
             .add_systems(PreUpdate, handle_resize_events)
             .add_systems(Update, render_terminal_to_handle);
     }
 }
+
+#[derive(Resource)]
+struct TerminalRender(Handle<Image>);
 
 /// A startup system that sets up the terminal.
 pub fn terminal_render_setup(
@@ -100,7 +73,6 @@ fn render_terminal_to_handle(
 }
 
 /// System that reacts to window resize
-
 fn handle_resize_events(
     mut resize_reader: EventReader<WindowResized>,
     mut softatui: ResMut<RatatuiContext>,

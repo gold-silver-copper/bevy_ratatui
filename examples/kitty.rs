@@ -2,7 +2,6 @@ use bevy::{
     app::{AppExit, ScheduleRunnerPlugin},
     prelude::*,
 };
-
 use bevy_ratatui::{
     RatatuiPlugins, event::KeyEvent, kitty::KittyEnabled, terminal::RatatuiContext,
 };
