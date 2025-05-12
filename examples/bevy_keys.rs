@@ -6,11 +6,8 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{
-    RatatuiPlugins,
-    event::KeyEvent,
-    input_forwarding::{Capability, Detected, Emulate, EmulationPolicy, ReleaseKey},
-    kitty::KittyEnabled,
-    terminal::RatatuiContext,
+    Capability, Detected, Emulate, EmulationPolicy, KeyEvent, KittyEnabled, RatatuiContext,
+    RatatuiPlugins, ReleaseKey,
 };
 use crossterm::event::KeyEventKind;
 use ratatui::text::Text;

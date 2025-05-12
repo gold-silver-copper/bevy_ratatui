@@ -65,6 +65,8 @@ mod windowed_context;
 pub use context_trait::TerminalContext;
 pub use crossterm_context::context::CrosstermContext;
 pub use crossterm_context::events::KeyEvent;
+pub use crossterm_context::events::MouseEvent;
+pub use crossterm_context::kitty::KittyEnabled;
 pub use crossterm_context::translation::*;
 pub use plugins::RatatuiPlugins;
 pub use ratatui_context::RatatuiContext;
