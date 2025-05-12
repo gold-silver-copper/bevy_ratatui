@@ -40,12 +40,21 @@ pub fn terminal_render_setup(
         },
         TextureDimension::D2,
         data,
-        TextureFormat::Rgba8Unorm,
+        TextureFormat::Rgba8UnormSrgb,
         RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
     );
     let handle = images.add(image);
-    commands.spawn(Sprite::from_image(handle.clone()));
+    commands.spawn((
+        ImageNode::new(handle.clone()),
+        Node {
+            justify_self: JustifySelf::Center,
+            align_self: AlignSelf::Center,
+            ..default()
+        },
+    ));
+
     commands.insert_resource(TerminalRender(handle));
+
     Ok(())
 }
 
@@ -67,7 +76,7 @@ fn render_terminal_to_handle(
         },
         TextureDimension::D2,
         data,
-        TextureFormat::Rgba8Unorm,
+        TextureFormat::Rgba8UnormSrgb,
         RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
     );
 }
