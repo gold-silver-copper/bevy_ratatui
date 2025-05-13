@@ -17,7 +17,7 @@ use bevy::{app::AppExit, diagnostic::FrameCount, prelude::*};
 #[cfg(not(feature = "windowed"))]
 use bevy::{app::ScheduleRunnerPlugin, state::app::StatesPlugin};
 #[cfg(not(feature = "windowed"))]
-use bevy_ratatui::KeyEvent;
+use bevy_ratatui::event::KeyEvent;
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
 #[cfg(not(feature = "windowed"))]
 use crossterm::event::KeyEventKind;

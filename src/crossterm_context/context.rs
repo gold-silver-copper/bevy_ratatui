@@ -10,10 +10,10 @@ use ratatui::Terminal;
 
 use ratatui::backend::CrosstermBackend;
 
-use crate::{RatatuiPlugins, TerminalContext};
+use crate::{RatatuiPlugins, context::TerminalContext};
 
 use super::{
-    cleanup::CleanupPlugin, error::ErrorPlugin, events::EventPlugin, kitty::KittyPlugin,
+    cleanup::CleanupPlugin, error::ErrorPlugin, event::EventPlugin, kitty::KittyPlugin,
     mouse::MousePlugin, translation::TranslationPlugin,
 };
 

@@ -16,7 +16,7 @@ input events, draw to the buffer, etcetera.
 ```rust
 use bevy::prelude::*;
 use bevy::app::ScheduleRunnerPlugin;
-use bevy_ratatui::{terminal::RatatuiContext, RatatuiPlugins};
+use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
 
 fn main() {
     let frame_time = std::time::Duration::from_secs_f32(1. / 60.);
@@ -63,6 +63,15 @@ map crossterm input events to normal bevy input events.
 ![Made with VHS](https://vhs.charm.sh/vhs-2g0S6RgGGQHseTCNItEQhg.gif)
 
 See the [demo example](examples/demo.rs) for the code and more information.
+
+## features
+
+- `windowed`: Render your ratatui application in a window instead of the
+  terminal buffer. Reference the `demo` example for how to set up a Bevy
+  project to handle either mode.
+- `serde`: Passthrough feature for serializing crossterm types.
+
+There are also a handful of features relating to running Bevy in `no_std` mode.
 
 ## see also
 

@@ -3,10 +3,10 @@ use bevy::prelude::*;
 use super::context_trait::TerminalContext;
 
 #[cfg(not(feature = "windowed"))]
-pub type DefaultContext = super::CrosstermContext;
+pub type DefaultContext = crate::context::CrosstermContext;
 
 #[cfg(feature = "windowed")]
-pub type DefaultContext = super::WindowedContext;
+pub type DefaultContext = crate::context::WindowedContext;
 
 /// A bevy Resource that wraps [ratatui::Terminal], setting up the terminal context when
 /// initialized (i.e. entering raw mode), restores the prior terminal state when dropped (i.e.
@@ -17,7 +17,7 @@ pub type DefaultContext = super::WindowedContext;
 ///
 /// ```rust
 /// use bevy::prelude::*;
-/// use bevy_ratatui::terminal::RatatuiContext;
+/// use bevy_ratatui::RatatuiContext;
 ///
 /// fn draw_system(mut context: ResMut<RatatuiContext>) {
 ///     context.draw(|frame| {
