@@ -89,7 +89,7 @@
 //! ```no_run
 //! # use std::time::Duration;
 //! # use bevy::prelude::*;
-//! # use bevy_ratatui::input_forwarding::*;
+//! # use bevy_ratatui::translation::*;
 //! # let mut app = App::new();
 //! app.insert_resource(ReleaseKey::Duration(Duration::from_secs_f32(0.5)));
 //! ```

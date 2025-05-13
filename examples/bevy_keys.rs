@@ -5,9 +5,11 @@ use bevy::{
     input::{ButtonState, keyboard::KeyboardInput},
     prelude::*,
 };
+use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
 use bevy_ratatui::{
-    Capability, Detected, Emulate, EmulationPolicy, KeyEvent, KittyEnabled, RatatuiContext,
-    RatatuiPlugins, ReleaseKey,
+    event::KeyEvent,
+    kitty::KittyEnabled,
+    translation::{Capability, Detected, Emulate, EmulationPolicy, ReleaseKey},
 };
 use crossterm::event::KeyEventKind;
 use ratatui::text::Text;

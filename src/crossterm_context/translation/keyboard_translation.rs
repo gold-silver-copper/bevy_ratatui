@@ -13,7 +13,7 @@ use bevy::{
 use crossterm::event::KeyModifiers;
 use smol_str::SmolStr;
 
-use crate::crossterm_context::events::{InputSet, KeyEvent};
+use crate::crossterm_context::event::{InputSet, KeyEvent};
 
 pub struct TranslationPlugin;
 
@@ -111,49 +111,6 @@ impl EmulationPolicy {
 /// Once those flags are set, they are never unset.
 #[derive(Debug, Resource, Default, Deref)]
 pub struct Detected(pub Capability);
-
-/// Pass crossterm key events through to the bevy input system. See
-/// [input_forwarding][crate::input_forwarding] for more details.
-pub struct KeyboardPlugin;
-
-impl Plugin for KeyboardPlugin {
-    fn build(&self, app: &mut App) {
-        if !app.is_plugin_added::<bevy::input::InputPlugin>() {
-            // We need this plugin to submit our events.
-            app.add_plugins(bevy::input::InputPlugin);
-        }
-        if !app.is_plugin_added::<bevy::time::TimePlugin>() {
-            // We need this plugin for the delay timer.
-            app.add_plugins(bevy::time::TimePlugin);
-        }
-        app.init_resource::<ReleaseKey>()
-            .init_resource::<Detected>()
-            .init_resource::<EmulationPolicy>()
-            .init_resource::<Emulate>()
-            .add_systems(Startup, setup_window)
-            .add_systems(
-                PreUpdate,
-                reset_emulation_check
-                    .run_if(resource_changed::<EmulationPolicy>)
-                    .in_set(InputSet::Pre),
-            )
-            .add_systems(
-                PreUpdate,
-                (detect_capabilities, check_for_emulation)
-                    .chain()
-                    .run_if(resource_exists::<Emulate>)
-                    .in_set(InputSet::CheckEmulation),
-            )
-            .add_systems(
-                PreUpdate,
-                (
-                    send_key_events_with_emulation.run_if(resource_exists::<Emulate>),
-                    send_key_events_no_emulation.run_if(not(resource_exists::<Emulate>)),
-                )
-                    .in_set(InputSet::EmitBevy),
-            );
-    }
-}
 
 /// A new type so we can implement Default and use with `Local`.
 #[derive(Debug, Deref, DerefMut)]

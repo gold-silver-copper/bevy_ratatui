@@ -2,7 +2,7 @@ use bevy::{
     app::{AppExit, ScheduleRunnerPlugin},
     prelude::*,
 };
-use bevy_ratatui::{KeyEvent, MouseEvent, RatatuiContext, RatatuiPlugins};
+use bevy_ratatui::{RatatuiContext, RatatuiPlugins, event::KeyEvent, event::MouseEvent};
 use crossterm::event::MouseEventKind;
 use rand::prelude::*;
 

@@ -9,7 +9,7 @@
 //!     app::{AppExit, ScheduleRunnerPlugin},
 //!     prelude::*,
 //! };
-//! use bevy_ratatui::{event::KeyEvent, terminal::RatatuiContext, RatatuiPlugins};
+//! use bevy_ratatui::{event::KeyEvent, RatatuiContext, RatatuiPlugins};
 //! use crossterm::event::KeyCode;
 //! use ratatui::text::Text;
 //!
@@ -57,18 +57,46 @@
 
 mod context_trait;
 mod crossterm_context;
-mod plugins;
 mod ratatui_context;
+mod ratatui_plugin;
 #[cfg(feature = "windowed")]
 mod windowed_context;
 
-pub use context_trait::TerminalContext;
-pub use crossterm_context::context::CrosstermContext;
-pub use crossterm_context::events::KeyEvent;
-pub use crossterm_context::events::MouseEvent;
-pub use crossterm_context::kitty::KittyEnabled;
-pub use crossterm_context::translation::*;
-pub use plugins::RatatuiPlugins;
 pub use ratatui_context::RatatuiContext;
-#[cfg(feature = "windowed")]
-pub use windowed_context::context::WindowedContext;
+pub use ratatui_plugin::RatatuiPlugins;
+
+pub mod context {
+    pub use super::context_trait::TerminalContext;
+    pub use super::crossterm_context::context::CrosstermContext;
+    pub use super::ratatui_context::DefaultContext;
+    pub use super::ratatui_plugin::ContextPlugin;
+    #[cfg(feature = "windowed")]
+    pub use super::windowed_context::context::WindowedContext;
+}
+
+pub mod cleanup {
+    pub use super::crossterm_context::cleanup::CleanupPlugin;
+}
+
+pub mod error {
+    pub use super::crossterm_context::error::ErrorPlugin;
+}
+
+pub mod event {
+    pub use super::crossterm_context::event::{
+        CrosstermEvent, EventPlugin, FocusEvent, InputSet, KeyEvent, MouseEvent, PasteEvent,
+        ResizeEvent,
+    };
+}
+
+pub mod kitty {
+    pub use super::crossterm_context::kitty::{KittyEnabled, KittyPlugin};
+}
+
+pub mod mouse {
+    pub use super::crossterm_context::mouse::{MouseEnabled, MousePlugin};
+}
+
+pub mod translation {
+    pub use super::crossterm_context::translation::*;
+}

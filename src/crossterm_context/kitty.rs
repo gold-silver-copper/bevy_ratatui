@@ -8,7 +8,7 @@ use crossterm::{
     terminal::supports_keyboard_enhancement,
 };
 
-use crate::plugins::context_setup;
+use crate::ratatui_plugin::context_setup;
 
 pub struct KittyPlugin;
 

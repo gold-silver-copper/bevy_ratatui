@@ -6,7 +6,7 @@ use ratatui::Terminal;
 
 use soft_ratatui::SoftBackend;
 
-use crate::TerminalContext;
+use crate::context::TerminalContext;
 
 use super::other::SoftRenderPlugin;
 
