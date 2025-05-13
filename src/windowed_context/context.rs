@@ -8,8 +8,10 @@ use soft_ratatui::SoftBackend;
 
 use crate::context::TerminalContext;
 
-use super::other::SoftRenderPlugin;
+use super::plugin::WindowedPlugin;
 
+/// Ratatui context that will set up a window and render the ratatui buffer using a 2D texture,
+/// instead of drawing to a terminal buffer.
 #[derive(Deref, DerefMut)]
 pub struct WindowedContext(Terminal<SoftBackend>);
 
@@ -34,7 +36,7 @@ impl TerminalContext<SoftBackend> for WindowedContext {
         _group: &crate::RatatuiPlugins,
         mut builder: bevy::app::PluginGroupBuilder,
     ) -> bevy::app::PluginGroupBuilder {
-        builder = builder.add(SoftRenderPlugin);
+        builder = builder.add(WindowedPlugin);
 
         builder
     }

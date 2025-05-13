@@ -7,6 +7,7 @@ use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
 };
 
+/// Plugin responsible for enabling mouse capture.
 pub struct MousePlugin;
 
 impl Plugin for MousePlugin {
@@ -15,6 +16,7 @@ impl Plugin for MousePlugin {
     }
 }
 
+/// Resource indicating that mouse capture was successfully enabled in the current terminal buffer.
 #[derive(Resource, Default)]
 pub struct MouseEnabled;
 

@@ -48,6 +48,7 @@ impl PluginGroup for RatatuiPlugins {
     }
 }
 
+/// The plugin responsible for adding the `RatatuiContext` resource to your bevy application.
 pub struct ContextPlugin;
 
 impl Plugin for ContextPlugin {

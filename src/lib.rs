@@ -100,3 +100,8 @@ pub mod mouse {
 pub mod translation {
     pub use super::crossterm_context::translation::*;
 }
+
+#[cfg(feature = "windowed")]
+pub mod windowed {
+    pub use super::windowed_context::plugin::WindowedPlugin;
+}

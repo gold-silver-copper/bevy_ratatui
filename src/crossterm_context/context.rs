@@ -17,6 +17,7 @@ use super::{
     mouse::MousePlugin, translation::TranslationPlugin,
 };
 
+/// Ratatui context that will draw to the terminal buffer using crossterm.
 #[derive(Deref, DerefMut, Debug)]
 pub struct CrosstermContext(Terminal<CrosstermBackend<Stdout>>);
 
