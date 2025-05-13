@@ -10,6 +10,16 @@ use crossterm::{
 
 use crate::ratatui_plugin::context_setup;
 
+/// Plugin responsible for enabling the Kitty keyboard protocol in the current buffer.
+///
+/// Provides additional information involving keyboard events. For example, key release events will
+/// be reported.
+///
+/// Refer to the above link for a list of terminals that support the protocol. An `Ok` result is not
+/// a guarantee that all features are supported: you should have fallbacks that you use until you
+/// detect the event type you are looking for.
+///
+/// [kitty keyboard protocol]: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 pub struct KittyPlugin;
 
 impl Plugin for KittyPlugin {
@@ -24,6 +34,8 @@ fn kitty_setup(mut commands: Commands) {
     }
 }
 
+/// A resource indicating that the Kitty keyboard protocol was successfully enabled in the current
+/// buffer.
 #[derive(Resource)]
 pub struct KittyEnabled;
 
@@ -33,16 +45,9 @@ impl Drop for KittyEnabled {
     }
 }
 
-/// Enables support for the [kitty keyboard protocol]
+/// Enables support for the Kitty keyboard protocol.
 ///
-/// Provides additional information involving keyboard events. For example, key release events will
-/// be reported.
-///
-/// Refer to the above link for a list of terminals that support the protocol. An `Ok` result is not
-/// a guarantee that all features are supported: you should have fallbacks that you use until you
-/// detect the event type you are looking for.
-///
-/// [kitty keyboard protocol]: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+/// See [KittyPlugin].
 pub fn enable_kitty_protocol() -> io::Result<()> {
     if supports_keyboard_enhancement()? {
         stdout().execute(PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::all()))?;
@@ -54,9 +59,9 @@ pub fn enable_kitty_protocol() -> io::Result<()> {
     ))
 }
 
-/// Disables the [kitty keyboard protocol]
+/// Disables the Kitty keyboard protocol, restoring the buffer to normal.
 ///
-/// [kitty keyboard protocol]: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+/// See [KittyPlugin].
 pub fn disable_kitty_protocol() -> io::Result<()> {
     stdout().execute(PopKeyboardEnhancementFlags)?;
     Ok(())

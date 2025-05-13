@@ -7,9 +7,11 @@ use bevy::{
 
 use crate::RatatuiContext;
 
-pub struct SoftRenderPlugin;
+/// A plugin that, rather than drawing to a terminal buffer, uses software rendering to build a 2D
+/// texture from the ratatui buffer, and displays the result in a window.
+pub struct WindowedPlugin;
 
-impl Plugin for SoftRenderPlugin {
+impl Plugin for WindowedPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, terminal_render_setup)
             .add_systems(PreUpdate, handle_resize_events)
@@ -20,7 +22,7 @@ impl Plugin for SoftRenderPlugin {
 #[derive(Resource)]
 struct TerminalRender(Handle<Image>);
 
-/// A startup system that sets up the terminal.
+/// A startup system that sets up the terminal
 pub fn terminal_render_setup(
     mut commands: Commands,
     softatui: ResMut<RatatuiContext>,
@@ -58,6 +60,7 @@ pub fn terminal_render_setup(
     Ok(())
 }
 
+/// System that updates the terminal texture each frame
 fn render_terminal_to_handle(
     softatui: ResMut<RatatuiContext>,
     mut images: ResMut<Assets<Image>>,
