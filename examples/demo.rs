@@ -20,7 +20,7 @@ use bevy::{app::ScheduleRunnerPlugin, state::app::StatesPlugin};
 use bevy_ratatui::event::KeyEvent;
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
 #[cfg(not(feature = "windowed"))]
-use crossterm::event::KeyEventKind;
+use ratatui::crossterm::event::KeyEventKind;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -90,7 +90,7 @@ fn keyboard_input_system(
     mut app_exit: EventWriter<AppExit>,
     mut counter_events: EventWriter<CounterEvent>,
 ) {
-    use crossterm::event::KeyCode;
+    use ratatui::crossterm::event::KeyCode;
     for event in events.read() {
         if let KeyEventKind::Release = event.kind {
             continue;

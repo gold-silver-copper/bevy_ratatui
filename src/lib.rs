@@ -10,7 +10,7 @@
 //!     prelude::*,
 //! };
 //! use bevy_ratatui::{event::KeyEvent, RatatuiContext, RatatuiPlugins};
-//! use crossterm::event::KeyCode;
+//! use ratatui::crossterm::event::KeyCode;
 //! use ratatui::text::Text;
 //!
 //! fn main() {
@@ -65,6 +65,9 @@ mod windowed_context;
 
 pub use ratatui_context::RatatuiContext;
 pub use ratatui_plugin::RatatuiPlugins;
+
+#[cfg(feature = "crossterm")]
+pub use ratatui::crossterm;
 
 pub mod context {
     pub use super::context_trait::TerminalContext;

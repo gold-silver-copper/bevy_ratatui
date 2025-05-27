@@ -2,11 +2,11 @@ use std::io::{Stdout, stdout};
 
 use bevy::prelude::*;
 
-use crossterm::{
+use ratatui::Terminal;
+use ratatui::crossterm::{
     ExecutableCommand, cursor,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::Terminal;
 
 use ratatui::backend::CrosstermBackend;
 

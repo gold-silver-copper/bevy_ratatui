@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins, event::KeyEvent, kitty::KittyEnabled};
-use crossterm::event::KeyEventKind;
+use ratatui::crossterm::event::KeyEventKind;
 use ratatui::text::Text;
 
 fn main() {
@@ -54,7 +54,7 @@ fn keyboard_input_system(
     mut exit: EventWriter<AppExit>,
     mut commands: Commands,
 ) {
-    use crossterm::event::KeyCode;
+    use ratatui::crossterm::event::KeyCode;
     for event in events.read() {
         match event.code {
             KeyCode::Char('q') | KeyCode::Esc => {

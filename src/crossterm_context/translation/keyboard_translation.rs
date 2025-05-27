@@ -10,7 +10,7 @@ use bevy::{
     input::{ButtonState, keyboard::KeyboardInput},
     prelude::*,
 };
-use crossterm::event::KeyModifiers;
+use ratatui::crossterm::event::KeyModifiers;
 use smol_str::SmolStr;
 
 use crate::crossterm_context::event::{InputSet, KeyEvent};
@@ -283,10 +283,16 @@ impl ReleaseKey {
 #[allow(clippy::too_many_arguments)]
 fn detect_capabilities(mut keys: EventReader<KeyEvent>, mut detected: ResMut<Detected>) {
     for key_event in keys.read() {
-        if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
+        if matches!(
+            key_event.code,
+            ratatui::crossterm::event::KeyCode::Modifier(_)
+        ) {
             detected.0 |= Capability::MODIFIER;
         }
-        if matches!(key_event.kind, crossterm::event::KeyEventKind::Release) {
+        if matches!(
+            key_event.kind,
+            ratatui::crossterm::event::KeyEventKind::Release
+        ) {
             detected.0 |= Capability::KEY_RELEASE;
         }
     }
@@ -471,14 +477,14 @@ fn modifier_to_bevy(
 }
 
 fn key_event_to_bevy(
-    key_event: &crossterm::event::KeyEvent,
+    key_event: &ratatui::crossterm::event::KeyEvent,
     window: Entity,
 ) -> Option<(
     bevy::input::keyboard::KeyboardInput,
-    crossterm::event::KeyModifiers,
+    ratatui::crossterm::event::KeyModifiers,
     bool,
 )> {
-    let crossterm::event::KeyEvent {
+    let ratatui::crossterm::event::KeyEvent {
         code,
         modifiers,
         kind,
@@ -486,12 +492,12 @@ fn key_event_to_bevy(
     } = key_event;
     let mut repeated = false;
     let state = match kind {
-        crossterm::event::KeyEventKind::Press => bevy::input::ButtonState::Pressed,
-        crossterm::event::KeyEventKind::Repeat => {
+        ratatui::crossterm::event::KeyEventKind::Press => bevy::input::ButtonState::Pressed,
+        ratatui::crossterm::event::KeyEventKind::Repeat => {
             repeated = true;
             bevy::input::ButtonState::Released
         }
-        crossterm::event::KeyEventKind::Release => bevy::input::ButtonState::Released,
+        ratatui::crossterm::event::KeyEventKind::Release => bevy::input::ButtonState::Released,
     };
     let key_code = to_bevy_keycode(code);
     let logical_key = to_bevy_key(code);
@@ -525,14 +531,14 @@ fn key_event_to_bevy(
 }
 
 fn to_bevy_keycode(
-    key_code: &crossterm::event::KeyCode,
+    key_code: &ratatui::crossterm::event::KeyCode,
 ) -> Option<(
     bevy::input::keyboard::KeyCode,
-    crossterm::event::KeyModifiers,
+    ratatui::crossterm::event::KeyModifiers,
 )> {
     use bevy::input::keyboard::KeyCode as b;
-    use crossterm::event::{KeyCode as c, KeyModifiers as m};
-    let mut mods = crossterm::event::KeyModifiers::empty();
+    use ratatui::crossterm::event::{KeyCode as c, KeyModifiers as m};
+    let mut mods = ratatui::crossterm::event::KeyModifiers::empty();
     match key_code {
         c::Backspace => Some(b::Backspace),
         c::Enter => Some(b::Enter),
@@ -817,7 +823,7 @@ fn to_bevy_keycode(
         c::Menu => Some(b::ContextMenu),
         c::KeypadBegin => None,
         c::Media(media) => {
-            use crossterm::event::MediaKeyCode::*;
+            use ratatui::crossterm::event::MediaKeyCode::*;
             match media {
                 Play => Some(b::MediaPlayPause),
                 Pause => Some(b::Pause),
@@ -835,7 +841,7 @@ fn to_bevy_keycode(
             }
         }
         c::Modifier(modifier) => {
-            use crossterm::event::ModifierKeyCode::*;
+            use ratatui::crossterm::event::ModifierKeyCode::*;
             match modifier {
                 LeftShift => Some(b::ShiftLeft),
                 LeftControl => Some(b::ControlLeft),
@@ -857,9 +863,11 @@ fn to_bevy_keycode(
     .map(|key_code| (key_code, mods))
 }
 
-fn to_bevy_key(key_code: &crossterm::event::KeyCode) -> Option<bevy::input::keyboard::Key> {
+fn to_bevy_key(
+    key_code: &ratatui::crossterm::event::KeyCode,
+) -> Option<bevy::input::keyboard::Key> {
     use bevy::input::keyboard::Key as b;
-    use crossterm::event::KeyCode as c;
+    use ratatui::crossterm::event::KeyCode as c;
     match key_code {
         c::Backspace => Some(b::Backspace),
         c::Enter => Some(b::Enter),
@@ -921,7 +929,7 @@ fn to_bevy_key(key_code: &crossterm::event::KeyCode) -> Option<bevy::input::keyb
         c::Menu => Some(b::ContextMenu),
         c::KeypadBegin => None,
         c::Media(media) => {
-            use crossterm::event::MediaKeyCode::*;
+            use ratatui::crossterm::event::MediaKeyCode::*;
             match media {
                 Play => Some(b::MediaPlay),
                 Pause => Some(b::Pause),
@@ -939,7 +947,7 @@ fn to_bevy_key(key_code: &crossterm::event::KeyCode) -> Option<bevy::input::keyb
             }
         }
         c::Modifier(modifier) => {
-            use crossterm::event::ModifierKeyCode::*;
+            use ratatui::crossterm::event::ModifierKeyCode::*;
             match modifier {
                 LeftShift => Some(b::Shift),
                 LeftControl => Some(b::Control),
@@ -961,12 +969,12 @@ fn to_bevy_key(key_code: &crossterm::event::KeyCode) -> Option<bevy::input::keyb
 }
 
 fn crossterm_modifier_to_bevy_key(
-    modifier: crossterm::event::KeyModifiers,
+    modifier: ratatui::crossterm::event::KeyModifiers,
 ) -> bevy::input::keyboard::Key {
     let mut i = modifier.into_iter();
     let modifier = i.next().expect("mod");
     use bevy::input::keyboard::Key as k;
-    use crossterm::event::KeyModifiers as c;
+    use ratatui::crossterm::event::KeyModifiers as c;
     let result = match modifier {
         c::SHIFT => k::Shift,
         c::CONTROL => k::Control,

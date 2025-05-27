@@ -2,7 +2,7 @@
 use std::io::stdout;
 
 use bevy::prelude::*;
-use crossterm::{
+use ratatui::crossterm::{
     ExecutableCommand,
     event::{DisableMouseCapture, EnableMouseCapture},
 };

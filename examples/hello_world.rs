@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 use bevy_ratatui::event::KeyEvent;
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
-use crossterm::event::KeyCode;
+use ratatui::crossterm::event::KeyCode;
 use ratatui::text::Text;
 
 fn main() {

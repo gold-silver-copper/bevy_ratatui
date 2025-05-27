@@ -8,7 +8,7 @@
 //! ```rust
 //! use bevy::{app::AppExit, prelude::*};
 //! use bevy_ratatui::event::KeyEvent;
-//! use crossterm::event::KeyCode;
+//! use ratatui::crossterm::event::KeyCode;
 //!
 //! fn keyboard_input_system(mut events: EventReader<KeyEvent>, mut exit: EventWriter<AppExit>) {
 //!     for event in events.read() {
@@ -24,7 +24,7 @@
 use std::time::Duration;
 
 use bevy::{app::AppExit, prelude::*};
-use crossterm::event::{self, Event::Key, KeyCode, KeyEventKind, KeyModifiers};
+use ratatui::crossterm::event::{self, Event::Key, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::Size;
 
 /// A plugin for handling events.

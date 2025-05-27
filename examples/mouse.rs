@@ -3,8 +3,8 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins, event::KeyEvent, event::MouseEvent};
-use crossterm::event::MouseEventKind;
 use rand::prelude::*;
+use ratatui::crossterm::event::MouseEventKind;
 
 fn main() {
     let wait_duration = std::time::Duration::from_secs_f64(1. / 60.); // 60 FPS
@@ -22,7 +22,7 @@ fn main() {
 }
 
 fn keyboard_input_system(mut events: EventReader<KeyEvent>, mut exit: EventWriter<AppExit>) {
-    use crossterm::event::KeyCode;
+    use ratatui::crossterm::event::KeyCode;
     for event in events.read() {
         match event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
@@ -126,7 +126,7 @@ fn mouse_input_system(
     context: Res<RatatuiContext>,
 ) {
     for event in events.read() {
-        let crossterm::event::MouseEvent {
+        let ratatui::crossterm::event::MouseEvent {
             kind, column, row, ..
         } = event.0;
         let size = context.size().unwrap(); // TODO: handle error properly

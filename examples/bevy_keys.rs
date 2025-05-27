@@ -11,7 +11,7 @@ use bevy_ratatui::{
     kitty::KittyEnabled,
     translation::{Capability, Detected, Emulate, EmulationPolicy, ReleaseKey},
 };
-use crossterm::event::KeyEventKind;
+use ratatui::crossterm::event::KeyEventKind;
 use ratatui::text::Text;
 
 fn main() {

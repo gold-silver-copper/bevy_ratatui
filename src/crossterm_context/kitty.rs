@@ -2,7 +2,7 @@
 use std::io::{self, stdout};
 
 use bevy::prelude::*;
-use crossterm::{
+use ratatui::crossterm::{
     ExecutableCommand,
     event::{KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags},
     terminal::supports_keyboard_enhancement,
