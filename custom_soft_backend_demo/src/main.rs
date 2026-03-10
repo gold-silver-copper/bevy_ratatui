@@ -4,7 +4,7 @@ use bevy::{app::AppExit, prelude::*};
 use bevy_ratatui::{
     RatatuiContext, RatatuiPlugins,
     context::TerminalContext,
-    windowed::{SoftTerminalContext, WindowedPlugin},
+    windowed::SoftTerminalContext,
 };
 use ratatui::{
     Terminal,
@@ -52,22 +52,9 @@ impl TerminalContext for EmbeddedWindowedContext {
 
     fn configure_plugin_group(
         _group: &RatatuiPlugins,
-        mut builder: bevy::app::PluginGroupBuilder,
+        builder: bevy::app::PluginGroupBuilder,
     ) -> bevy::app::PluginGroupBuilder {
-        builder = builder.add(WindowedPlugin::<Self>::default());
-        builder
-    }
-}
-
-impl SoftTerminalContext for EmbeddedWindowedContext {
-    type RasterBackend = EmbeddedGraphics;
-
-    fn soft_backend(&self) -> &SoftBackend<Self::RasterBackend> {
-        self.backend()
-    }
-
-    fn soft_backend_mut(&mut self) -> &mut SoftBackend<Self::RasterBackend> {
-        self.backend_mut()
+        Self::configure_windowed_plugin_group(builder)
     }
 }
 

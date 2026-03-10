@@ -1,3 +1,5 @@
+use std::ops::DerefMut;
+
 use std::fmt::Debug;
 
 use bevy::prelude::*;
@@ -18,11 +20,37 @@ use super::plugin::WindowedPlugin;
 pub struct WindowedContext(Terminal<SoftBackend<EmbeddedGraphics>>);
 
 /// Trait for windowed contexts backed by [`soft_ratatui::SoftBackend`].
-pub trait SoftTerminalContext: TerminalContext {
+pub trait SoftTerminalContext:
+    TerminalContext<Backend = SoftBackend<Self::RasterBackend>>
+    + DerefMut<Target = Terminal<SoftBackend<Self::RasterBackend>>>
+{
     type RasterBackend: RasterBackend;
 
-    fn soft_backend(&self) -> &SoftBackend<Self::RasterBackend>;
-    fn soft_backend_mut(&mut self) -> &mut SoftBackend<Self::RasterBackend>;
+    fn soft_backend(&self) -> &SoftBackend<Self::RasterBackend> {
+        self.backend()
+    }
+
+    fn soft_backend_mut(&mut self) -> &mut SoftBackend<Self::RasterBackend> {
+        self.backend_mut()
+    }
+
+    fn configure_windowed_plugin_group(
+        mut builder: bevy::app::PluginGroupBuilder,
+    ) -> bevy::app::PluginGroupBuilder
+    where
+        Self: Sized,
+    {
+        builder = builder.add(WindowedPlugin::<Self>::default());
+        builder
+    }
+}
+
+impl<T, R> SoftTerminalContext for T
+where
+    T: TerminalContext<Backend = SoftBackend<R>> + DerefMut<Target = Terminal<SoftBackend<R>>>,
+    R: RasterBackend,
+{
+    type RasterBackend = R;
 }
 
 impl Debug for WindowedContext {
@@ -55,22 +83,8 @@ impl TerminalContext for WindowedContext {
 
     fn configure_plugin_group(
         _group: &crate::RatatuiPlugins,
-        mut builder: bevy::app::PluginGroupBuilder,
+        builder: bevy::app::PluginGroupBuilder,
     ) -> bevy::app::PluginGroupBuilder {
-        builder = builder.add(WindowedPlugin::<Self>::default());
-
-        builder
-    }
-}
-
-impl SoftTerminalContext for WindowedContext {
-    type RasterBackend = EmbeddedGraphics;
-
-    fn soft_backend(&self) -> &SoftBackend<Self::RasterBackend> {
-        self.backend()
-    }
-
-    fn soft_backend_mut(&mut self) -> &mut SoftBackend<Self::RasterBackend> {
-        self.backend_mut()
+        Self::configure_windowed_plugin_group(builder)
     }
 }

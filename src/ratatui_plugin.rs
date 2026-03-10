@@ -70,13 +70,6 @@ impl<C: TerminalContext> PluginGroup for RatatuiPluginsFor<C> {
     }
 }
 
-impl RatatuiPluginsFor<crate::context::DefaultContext> {
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> Self {
-        <Self as Default>::default()
-    }
-}
-
 /// The plugin responsible for adding the `RatatuiContext` resource to your bevy application.
 pub struct ContextPlugin<C: TerminalContext = crate::context::DefaultContext>(
     PhantomData<fn() -> C>,
