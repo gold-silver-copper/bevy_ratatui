@@ -8,7 +8,7 @@ use crate::context::TerminalContext;
 use soft_ratatui::embedded_graphics_unicodefonts::{
     mono_8x13_atlas, mono_8x13_bold_atlas, mono_8x13_italic_atlas,
 };
-use soft_ratatui::{EmbeddedGraphics, SoftBackend};
+use soft_ratatui::{EmbeddedGraphics, RasterBackend, SoftBackend};
 
 use super::plugin::WindowedPlugin;
 
@@ -17,13 +17,23 @@ use super::plugin::WindowedPlugin;
 #[derive(Deref, DerefMut)]
 pub struct WindowedContext(Terminal<SoftBackend<EmbeddedGraphics>>);
 
+/// Trait for windowed contexts backed by [`soft_ratatui::SoftBackend`].
+pub trait SoftTerminalContext: TerminalContext {
+    type RasterBackend: RasterBackend;
+
+    fn soft_backend(&self) -> &SoftBackend<Self::RasterBackend>;
+    fn soft_backend_mut(&mut self) -> &mut SoftBackend<Self::RasterBackend>;
+}
+
 impl Debug for WindowedContext {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "WindowedContext()")
     }
 }
 
-impl TerminalContext<SoftBackend<EmbeddedGraphics>> for WindowedContext {
+impl TerminalContext for WindowedContext {
+    type Backend = SoftBackend<EmbeddedGraphics>;
+
     fn init() -> Result<Self> {
         let font_regular = mono_8x13_atlas();
         let font_italic = mono_8x13_italic_atlas();
@@ -47,8 +57,20 @@ impl TerminalContext<SoftBackend<EmbeddedGraphics>> for WindowedContext {
         _group: &crate::RatatuiPlugins,
         mut builder: bevy::app::PluginGroupBuilder,
     ) -> bevy::app::PluginGroupBuilder {
-        builder = builder.add(WindowedPlugin);
+        builder = builder.add(WindowedPlugin::<Self>::default());
 
         builder
+    }
+}
+
+impl SoftTerminalContext for WindowedContext {
+    type RasterBackend = EmbeddedGraphics;
+
+    fn soft_backend(&self) -> &SoftBackend<Self::RasterBackend> {
+        self.backend()
+    }
+
+    fn soft_backend_mut(&mut self) -> &mut SoftBackend<Self::RasterBackend> {
+        self.backend_mut()
     }
 }
