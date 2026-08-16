@@ -7,7 +7,9 @@ use std::panic;
 
 use bevy::prelude::*;
 
-use crate::RatatuiContext;
+use crate::ratatui_plugin::context_setup;
+
+use super::cleanup::{CleanupHandle, report_cleanup_error};
 
 /// A plugin that sets up panic handling.
 ///
@@ -18,7 +20,8 @@ pub struct ErrorPlugin;
 
 impl Plugin for ErrorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, error_setup);
+        app.init_resource::<CleanupHandle>()
+            .add_systems(Startup, error_setup.before(context_setup));
     }
 }
 
@@ -26,10 +29,11 @@ impl Plugin for ErrorPlugin {
 ///
 /// Makes the app resilient to panics by restoring the terminal before printing the panic. This
 /// prevents error messages from being messed up by the terminal state.
-pub fn error_setup() -> Result {
+pub(crate) fn error_setup(cleanup: Res<CleanupHandle>) -> Result {
+    let cleanup = CleanupHandle::clone(&cleanup);
     let panic_hook = panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
-        let _ = RatatuiContext::restore();
+        report_cleanup_error("restore terminal", cleanup.run());
         panic_hook(panic_info);
     }));
 

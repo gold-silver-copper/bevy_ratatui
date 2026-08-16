@@ -39,7 +39,7 @@ impl TerminalContext<SoftBackend<EmbeddedGraphics>> for WindowedContext {
         Ok(Self(terminal))
     }
 
-    fn restore() -> Result<()> {
+    fn restore(&self) -> Result<()> {
         Ok(())
     }
 

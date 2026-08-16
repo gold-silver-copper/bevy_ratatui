@@ -10,6 +10,11 @@ use ratatui::crossterm::{
 
 use crate::ratatui_plugin::context_setup;
 
+use super::{
+    cleanup::{CleanupHandle, report_cleanup_error},
+    error::error_setup,
+};
+
 /// Plugin responsible for enabling the Kitty keyboard protocol in the current buffer.
 ///
 /// Provides additional information involving keyboard events. For example, key release events will
@@ -24,39 +29,49 @@ pub struct KittyPlugin;
 
 impl Plugin for KittyPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, kitty_setup.after(context_setup));
+        app.init_resource::<CleanupHandle>()
+            .add_systems(Startup, kitty_setup.after(context_setup).after(error_setup));
     }
 }
 
-fn kitty_setup(mut commands: Commands) {
-    if enable_kitty_protocol().is_ok() {
-        commands.insert_resource(KittyEnabled);
+pub(crate) fn kitty_setup(mut commands: Commands, cleanup: Res<CleanupHandle>) {
+    if enable_kitty_protocol_with_cleanup(&cleanup).is_ok() {
+        commands.insert_resource(KittyEnabled(CleanupHandle::clone(&cleanup)));
+    } else {
+        report_cleanup_error(
+            "roll back Kitty keyboard enhancements",
+            cleanup.disable_kitty(),
+        );
     }
 }
 
 /// A resource indicating that the Kitty keyboard protocol was successfully enabled in the current
 /// buffer.
 #[derive(Resource)]
-pub struct KittyEnabled;
+pub struct KittyEnabled(CleanupHandle);
 
 impl Drop for KittyEnabled {
     fn drop(&mut self) {
-        let _ = disable_kitty_protocol();
+        report_cleanup_error(
+            "disable Kitty keyboard enhancements",
+            self.0.disable_kitty(),
+        );
     }
 }
 
-/// Enables support for the Kitty keyboard protocol.
-///
-/// See [KittyPlugin].
-pub fn enable_kitty_protocol() -> io::Result<()> {
+fn enable_kitty_protocol_with_cleanup(cleanup: &CleanupHandle) -> io::Result<()> {
     if supports_keyboard_enhancement()? {
-        stdout().execute(PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::all()))?;
-        return Ok(());
+        return cleanup.enable_kitty(push_kitty_protocol);
     }
     Err(io::Error::new(
         io::ErrorKind::Unsupported,
         "Kitty keyboard protocol is not supported by this terminal.",
     ))
+}
+
+fn push_kitty_protocol() -> io::Result<()> {
+    stdout().execute(PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::all()))?;
+    Ok(())
 }
 
 /// Disables the Kitty keyboard protocol, restoring the buffer to normal.

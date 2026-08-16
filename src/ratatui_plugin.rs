@@ -7,6 +7,9 @@ use crate::{RatatuiContext, context::DefaultContext};
 
 use crate::context::TerminalContext;
 
+#[cfg(all(feature = "crossterm", not(feature = "windowed")))]
+use crate::{context::CrosstermContext, crossterm_context::cleanup::CleanupHandle};
+
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
 /// # Example
@@ -58,6 +61,23 @@ impl Plugin for ContextPlugin {
 }
 
 /// A startup system that sets up the terminal context.
+#[cfg(all(feature = "crossterm", not(feature = "windowed")))]
+pub fn context_setup(
+    mut commands: Commands,
+    cleanup: Option<bevy::prelude::Res<CleanupHandle>>,
+) -> Result {
+    let cleanup = cleanup
+        .as_deref()
+        .cloned()
+        .unwrap_or_else(CleanupHandle::default);
+    let terminal = RatatuiContext(CrosstermContext::init_with_cleanup(cleanup)?);
+    commands.insert_resource(terminal);
+
+    Ok(())
+}
+
+/// A startup system that sets up the terminal context.
+#[cfg(feature = "windowed")]
 pub fn context_setup(mut commands: Commands) -> Result {
     let terminal = RatatuiContext::init()?;
     commands.insert_resource(terminal);

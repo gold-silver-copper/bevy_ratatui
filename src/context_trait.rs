@@ -17,7 +17,7 @@ pub trait TerminalContext<T: Backend + 'static>:
     fn init() -> Result<Self>;
 
     /// Restore the terminal to its normal state after exiting.
-    fn restore() -> Result<()>;
+    fn restore(&self) -> Result<()>;
 
     /// Configure the plugin group to add the plugins necessary for this particular backend's
     /// functionality.
