@@ -1334,6 +1334,7 @@ dependencies = [
  "bevy",
  "bitflags 2.11.1",
  "color-eyre",
+ "nix 0.30.1",
  "rand 0.9.4",
  "ratatui",
  "soft_ratatui",

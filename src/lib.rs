@@ -80,16 +80,6 @@ pub mod context {
 }
 
 #[cfg(feature = "crossterm")]
-pub mod cleanup {
-    pub use super::crossterm_context::cleanup::CleanupPlugin;
-}
-
-#[cfg(feature = "crossterm")]
-pub mod error {
-    pub use super::crossterm_context::error::ErrorPlugin;
-}
-
-#[cfg(feature = "crossterm")]
 pub mod event {
     pub use super::crossterm_context::event::{
         CrosstermMessage, EventPlugin, FocusMessage, InputSet, KeyMessage, MouseMessage,
