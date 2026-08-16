@@ -53,9 +53,10 @@ impl CleanupPlan {
     }
 }
 
-struct RestoreOnDrop(Option<CleanupPlan>);
+/// Rolls back each setup step that may have taken effect if initialization returns early.
+struct SetupRollback(Option<CleanupPlan>);
 
-impl RestoreOnDrop {
+impl SetupRollback {
     fn new() -> Self {
         Self(Some(CleanupPlan::default()))
     }
@@ -73,7 +74,7 @@ impl RestoreOnDrop {
     }
 }
 
-impl Drop for RestoreOnDrop {
+impl Drop for SetupRollback {
     fn drop(&mut self) {
         if let Some(plan) = self.0 {
             report_cleanup_error("roll back terminal initialization", restore_terminal(plan));
@@ -87,10 +88,11 @@ struct PreviousPanicHook {
     hook: Box<PanicHook>,
 }
 
+/// Owns the hook that was installed before the terminal session started.
 struct PanicHookGuard(Option<Arc<PreviousPanicHook>>);
 
 impl PanicHookGuard {
-    fn restore(&mut self) {
+    fn restore_previous_hook(&mut self) {
         let Some(previous) = self.0.take() else {
             return;
         };
@@ -105,6 +107,10 @@ impl PanicHookGuard {
     }
 }
 
+/// Owns cleanup after terminal setup has completed successfully.
+///
+/// Normal app destruction restores the terminal here. During unwinding, the installed panic hook
+/// has already restored it before invoking the caller's hook, so `Drop` must not repeat cleanup.
 #[derive(Resource)]
 struct TerminalSession {
     plan: CleanupPlan,
@@ -118,28 +124,28 @@ impl Drop for TerminalSession {
         }
 
         report_cleanup_error("restore terminal", restore_terminal(self.plan));
-        self.panic_hook.restore();
+        self.panic_hook.restore_previous_hook();
     }
 }
 
 pub(crate) fn setup(mut commands: Commands, settings: Res<CrosstermSettings>) -> Result {
     let context = RatatuiContext::init()?;
-    let mut restore_on_drop = RestoreOnDrop::new();
+    let mut setup_rollback = SetupRollback::new();
 
     #[cfg(feature = "mouse")]
     if settings.enable_mouse_capture {
-        restore_on_drop.plan_mut().mouse = true;
+        setup_rollback.plan_mut().mouse = true;
         enable_mouse_capture()?;
     }
 
     if settings.enable_kitty_protocol && supports_kitty_protocol().unwrap_or(false) {
-        restore_on_drop.plan_mut().kitty = true;
+        setup_rollback.plan_mut().kitty = true;
         enable_kitty_protocol()?;
     }
 
-    let plan = restore_on_drop.plan();
+    let plan = setup_rollback.plan();
     let panic_hook = install_panic_hook(plan);
-    restore_on_drop.disarm();
+    setup_rollback.disarm();
 
     commands.insert_resource(context);
     commands.insert_resource(TerminalSession { plan, panic_hook });

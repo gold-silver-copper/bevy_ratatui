@@ -67,10 +67,14 @@ impl PluginGroup for RatatuiPlugins {
 
 /// The plugin responsible for adding the `RatatuiContext` resource and owning its lifecycle.
 ///
-/// With the Crossterm backend, dropping the app restores the terminal and reinstates the previous
-/// panic hook. A panic restores the terminal before invoking that hook. Continuing to run the app
-/// after catching a panic and concurrent panics are unsupported. Install other panic hooks before
-/// running the app; hooks installed later must chain to the existing hook.
+/// With the Crossterm backend, the terminal session installs a process-wide panic hook at terminal
+/// startup. On normal teardown, dropping the app restores the terminal and reinstates the hook from
+/// before the session; a panic restores the terminal before invoking that hook.
+///
+/// Install other panic hooks before the app's first update. Replacing the hook while the session is
+/// active is unsupported. A later hook must chain to the session hook for panic cleanup to run, and
+/// it will not remain installed after normal session teardown. Continuing to run the app after
+/// catching a panic and concurrent panics are also unsupported.
 pub struct ContextPlugin;
 
 impl Plugin for ContextPlugin {
