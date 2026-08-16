@@ -1,4 +1,7 @@
-use std::io::{self, Stdout, stdout};
+use std::{
+    io::{self, Stdout, stdout},
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use bevy::prelude::*;
 
@@ -24,7 +27,11 @@ use super::translation::TranslationPlugin;
 
 /// Ratatui context that will draw to the terminal buffer using crossterm.
 #[derive(Deref, DerefMut, Debug)]
-pub struct CrosstermContext(#[deref] Terminal<CrosstermBackend<Stdout>>, bool);
+pub struct CrosstermContext {
+    #[deref]
+    terminal: Terminal<CrosstermBackend<Stdout>>,
+    cleanup: Option<TerminalCleanup>,
+}
 
 #[derive(Clone, Copy, Default, Resource)]
 pub(crate) struct CrosstermSettings {
@@ -68,16 +75,54 @@ impl CrosstermContext {
     }
 
     #[cfg(not(feature = "windowed"))]
-    pub(crate) fn relinquish_cleanup(&mut self) {
-        self.1 = false;
+    pub(crate) fn take_cleanup(&mut self) -> TerminalCleanup {
+        self.cleanup
+            .take()
+            .expect("terminal cleanup ownership is available")
     }
 }
 
 impl Drop for CrosstermContext {
     fn drop(&mut self) {
-        if self.1 {
-            let _ = Self::restore_terminal();
+        // Dropping the token restores a directly owned terminal; a plugin-owned context has
+        // already moved the token into its `TerminalSession`.
+        drop(self.cleanup.take());
+    }
+}
+
+/// The unique right to restore an initialized terminal.
+///
+/// The app session shares this token with its panic hook, so the atomic transition is what makes
+/// cleanup exactly once across those two process-wide paths. Moving the token out of a direct
+/// context transfers that right to the session without a second owner.
+#[derive(Debug)]
+pub(crate) struct TerminalCleanup {
+    active: AtomicBool,
+}
+
+impl TerminalCleanup {
+    pub(crate) fn new() -> Self {
+        Self {
+            active: AtomicBool::new(true),
         }
+    }
+
+    pub(crate) fn restore_with(&self, restore: impl FnOnce() -> io::Result<()>) -> io::Result<()> {
+        if !self.active.swap(false, Ordering::AcqRel) {
+            return Ok(());
+        }
+
+        restore()
+    }
+
+    fn restore(&self) -> io::Result<()> {
+        self.restore_with(CrosstermContext::restore_terminal)
+    }
+}
+
+impl Drop for TerminalCleanup {
+    fn drop(&mut self) {
+        let _ = self.restore();
     }
 }
 
@@ -102,12 +147,10 @@ impl TerminalContext<CrosstermBackend<Stdout>> for CrosstermContext {
         let terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
         rollback.disarm();
-        Ok(Self(terminal, true))
-    }
-
-    fn restore() -> Result<()> {
-        Self::restore_terminal()?;
-        Ok(())
+        Ok(Self {
+            terminal,
+            cleanup: Some(TerminalCleanup::new()),
+        })
     }
 
     fn configure_plugin_group(
@@ -137,5 +180,33 @@ impl TerminalContext<CrosstermBackend<Stdout>> for CrosstermContext {
         }
 
         builder
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::AtomicUsize;
+
+    use super::*;
+
+    #[test]
+    fn terminal_cleanup_token_allows_one_restore() {
+        let cleanup = TerminalCleanup::new();
+        let calls = AtomicUsize::new(0);
+
+        cleanup
+            .restore_with(|| {
+                calls.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                Ok(())
+            })
+            .unwrap();
+        cleanup
+            .restore_with(|| {
+                calls.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                Ok(())
+            })
+            .unwrap();
+
+        assert_eq!(calls.load(std::sync::atomic::Ordering::Relaxed), 1);
     }
 }

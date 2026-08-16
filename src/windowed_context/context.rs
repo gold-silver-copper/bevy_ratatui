@@ -39,10 +39,6 @@ impl TerminalContext<SoftBackend<EmbeddedGraphics>> for WindowedContext {
         Ok(Self(terminal))
     }
 
-    fn restore() -> Result<()> {
-        Ok(())
-    }
-
     fn configure_plugin_group(
         _group: &crate::RatatuiPlugins,
         mut builder: bevy::app::PluginGroupBuilder,

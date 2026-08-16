@@ -3,7 +3,6 @@ use std::{panic, sync::Arc};
 
 type PanicHook = Box<dyn Fn(&panic::PanicHookInfo<'_>) + Send + Sync + 'static>;
 
-#[derive(Default)]
 pub(crate) struct PanicHookGuard(Option<Arc<PanicHook>>);
 
 impl PanicHookGuard {
@@ -17,10 +16,6 @@ impl PanicHookGuard {
         Self(Some(previous))
     }
 
-    pub(crate) fn is_installed(&self) -> bool {
-        self.0.is_some()
-    }
-
     pub(crate) fn restore(&mut self) {
         let Some(previous) = self.0.take() else {
             return;
@@ -30,6 +25,14 @@ impl PanicHookGuard {
         match Arc::try_unwrap(previous) {
             Ok(previous) => panic::set_hook(previous),
             Err(previous) => panic::set_hook(Box::new(move |info| previous(info))),
+        }
+    }
+}
+
+impl Drop for PanicHookGuard {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            self.restore();
         }
     }
 }

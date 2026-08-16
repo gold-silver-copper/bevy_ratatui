@@ -44,6 +44,9 @@ jobs:
       - name: cargo generate-lockfile
         run: cargo generate-lockfile
 
+      - name: cargo test --locked (default features)
+        run: cargo test --locked --all-targets
+
       - name: cargo test --locked
         run: cargo test --locked --all-features --all-targets
 
@@ -66,6 +69,9 @@ jobs:
 
       - name: cargo generate-lockfile
         run: cargo generate-lockfile
+
+      - name: cargo test --locked (default features)
+        run: cargo test --locked --all-targets
 
       - name: cargo test
         run: cargo test --locked --all-features --all-targets

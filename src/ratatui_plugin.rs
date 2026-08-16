@@ -61,7 +61,8 @@ impl PluginGroup for RatatuiPlugins {
 /// With Crossterm, the complete session is acquired before its process-wide panic hook is installed.
 /// Normal teardown restores terminal modes in order and reinstates the previous hook; panic cleanup
 /// runs before that hook. Replacing the hook while the app is active, continuing after catching a
-/// panic, and concurrent panics are not supported.
+/// panic, panics on a thread that does not terminate the app, and concurrent panics are not
+/// supported.
 pub struct ContextPlugin;
 
 impl Plugin for ContextPlugin {

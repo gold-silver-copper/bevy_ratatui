@@ -9,9 +9,10 @@ pub type DefaultContext = crate::context::CrosstermContext;
 pub type DefaultContext = crate::context::WindowedContext;
 
 /// A bevy Resource that wraps [ratatui::Terminal] and can be brought into Bevy systems to interact
-/// with Ratatui. [`ContextPlugin`](crate::context::ContextPlugin) owns the complete terminal
-/// lifecycle, including ordered cleanup. For example, use this resource to draw to the terminal
-/// each frame, like the below example.
+/// with Ratatui. When initialized directly, dropping this resource restores the terminal. When
+/// created by [`ContextPlugin`](crate::context::ContextPlugin), the plugin takes ownership of the
+/// complete terminal lifecycle so optional terminal modes can be cleaned up in order. For example,
+/// use this resource to draw to the terminal each frame, like the below example.
 ///
 /// # Example
 ///
@@ -31,9 +32,5 @@ pub struct RatatuiContext(pub DefaultContext);
 impl RatatuiContext {
     pub fn init() -> Result<Self> {
         Ok(Self(DefaultContext::init()?))
-    }
-
-    pub fn restore() -> Result {
-        DefaultContext::restore()
     }
 }
