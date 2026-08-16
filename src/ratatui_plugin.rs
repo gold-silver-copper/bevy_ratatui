@@ -1,6 +1,6 @@
 use bevy::{
     app::{Plugin, PluginGroup, PluginGroupBuilder},
-    prelude::Result,
+    prelude::{IntoScheduleConfigs, Result, SystemSet},
 };
 
 #[cfg(feature = "windowed")]
@@ -62,17 +62,22 @@ impl PluginGroup for RatatuiPlugins {
 /// Normal teardown restores terminal modes in order and reinstates the previous hook; panic cleanup
 /// runs before that hook. Replacing the hook while the app is active, continuing after catching a
 /// panic, panics on a thread that does not terminate the app, and concurrent panics are not
-/// supported.
+/// supported. Destructors cannot restore the terminal after `process::exit`, `SIGKILL`, or another
+/// hard termination, and this crate does not install signal handlers for graceful signal recovery.
 pub struct ContextPlugin;
+
+/// Ordering set for work that must run after the terminal context has been acquired.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, SystemSet)]
+pub struct ContextSetup;
 
 impl Plugin for ContextPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         #[cfg(all(feature = "crossterm", not(feature = "windowed")))]
         app.init_resource::<CrosstermSettings>()
-            .add_systems(bevy::app::PreStartup, context_setup);
+            .add_systems(bevy::app::PreStartup, context_setup.in_set(ContextSetup));
 
         #[cfg(feature = "windowed")]
-        app.add_systems(bevy::app::Startup, context_setup);
+        app.add_systems(bevy::app::Startup, context_setup.in_set(ContextSetup));
     }
 }
 

@@ -74,7 +74,7 @@ pub mod context {
     #[cfg(feature = "crossterm")]
     pub use super::crossterm_context::context::CrosstermContext;
     pub use super::ratatui_context::DefaultContext;
-    pub use super::ratatui_plugin::ContextPlugin;
+    pub use super::ratatui_plugin::{ContextPlugin, ContextSetup};
     #[cfg(feature = "windowed")]
     pub use super::windowed_context::context::WindowedContext;
 }
