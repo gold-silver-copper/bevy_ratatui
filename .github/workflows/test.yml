@@ -44,8 +44,8 @@ jobs:
       - name: cargo generate-lockfile
         run: cargo generate-lockfile
 
-      - name: terminal lifecycle tests
-        run: cargo test --locked --test terminal_lifecycle
+      - name: cargo test --locked (default features)
+        run: cargo test --locked --all-targets
 
       - name: cargo test --locked
         run: cargo test --locked --all-features --all-targets
@@ -70,8 +70,8 @@ jobs:
       - name: cargo generate-lockfile
         run: cargo generate-lockfile
 
-      - name: terminal lifecycle tests
-        run: cargo test --locked --test terminal_lifecycle
+      - name: cargo test --locked (default features)
+        run: cargo test --locked --all-targets
 
       - name: cargo test
         run: cargo test --locked --all-features --all-targets
