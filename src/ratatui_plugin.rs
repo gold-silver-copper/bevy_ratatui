@@ -1,11 +1,19 @@
 use bevy::{
-    app::{Plugin, PluginGroup, PluginGroupBuilder, Startup},
-    prelude::{Commands, Result},
+    app::{Plugin, PluginGroup, PluginGroupBuilder},
+    prelude::Result,
 };
 
-use crate::{RatatuiContext, context::DefaultContext};
+#[cfg(feature = "windowed")]
+use bevy::prelude::Commands;
+
+#[cfg(feature = "windowed")]
+use crate::RatatuiContext;
+use crate::context::DefaultContext;
 
 use crate::context::TerminalContext;
+
+#[cfg(all(feature = "crossterm", not(feature = "windowed")))]
+use crate::crossterm_context::{cleanup::setup, context::CrosstermSettings};
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
@@ -48,16 +56,33 @@ impl PluginGroup for RatatuiPlugins {
     }
 }
 
-/// The plugin responsible for adding the `RatatuiContext` resource to your bevy application.
+/// The plugin responsible for owning the terminal session and adding the `RatatuiContext` resource.
+///
+/// With Crossterm, the complete session is acquired before its process-wide panic hook is installed.
+/// Normal teardown restores terminal modes in order and reinstates the previous hook; panic cleanup
+/// runs before that hook. Replacing the hook while the app is active, continuing after catching a
+/// panic, and concurrent panics are not supported.
 pub struct ContextPlugin;
 
 impl Plugin for ContextPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, context_setup);
+        #[cfg(all(feature = "crossterm", not(feature = "windowed")))]
+        app.init_resource::<CrosstermSettings>()
+            .add_systems(bevy::app::PreStartup, context_setup);
+
+        #[cfg(feature = "windowed")]
+        app.add_systems(bevy::app::Startup, context_setup);
     }
 }
 
 /// A startup system that sets up the terminal context.
+#[cfg(all(feature = "crossterm", not(feature = "windowed")))]
+pub fn context_setup(world: &mut bevy::prelude::World) -> Result {
+    setup(world)
+}
+
+/// A startup system that sets up the terminal context.
+#[cfg(feature = "windowed")]
 pub fn context_setup(mut commands: Commands) -> Result {
     let terminal = RatatuiContext::init()?;
     commands.insert_resource(terminal);

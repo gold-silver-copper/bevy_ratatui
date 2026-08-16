@@ -1,37 +1,35 @@
-//! Panic handling for the app.
-//!
-//! This module provides a plugin that sets up panic handling for the app. It installs a hook for
-//! panic handling that restores the terminal before printing the panic. This ensures that the error
-//! message is not messed up by the terminal state.
-use std::panic;
+//! Panic-hook ownership for the terminal session.
+use std::{panic, sync::Arc};
 
-use bevy::prelude::*;
+type PanicHook = Box<dyn Fn(&panic::PanicHookInfo<'_>) + Send + Sync + 'static>;
 
-use crate::RatatuiContext;
+#[derive(Default)]
+pub(crate) struct PanicHookGuard(Option<Arc<PanicHook>>);
 
-/// A plugin that sets up panic handling.
-///
-/// This plugin installs a hook for panic handling that restores the terminal before printing the
-/// panic message. This ensures that the panic message is not messed up by the terminal
-/// state.
-pub struct ErrorPlugin;
-
-impl Plugin for ErrorPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, error_setup);
+impl PanicHookGuard {
+    pub(crate) fn install(cleanup: impl Fn() + Send + Sync + 'static) -> Self {
+        let previous = Arc::new(panic::take_hook());
+        let panic_hook = Arc::clone(&previous);
+        panic::set_hook(Box::new(move |info| {
+            cleanup();
+            panic_hook(info);
+        }));
+        Self(Some(previous))
     }
-}
 
-/// Installs a hook for panic handling.
-///
-/// Makes the app resilient to panics by restoring the terminal before printing the panic. This
-/// prevents error messages from being messed up by the terminal state.
-pub fn error_setup() -> Result {
-    let panic_hook = panic::take_hook();
-    panic::set_hook(Box::new(move |panic_info| {
-        let _ = RatatuiContext::restore();
-        panic_hook(panic_info);
-    }));
+    pub(crate) fn is_installed(&self) -> bool {
+        self.0.is_some()
+    }
 
-    Ok(())
+    pub(crate) fn restore(&mut self) {
+        let Some(previous) = self.0.take() else {
+            return;
+        };
+
+        drop(panic::take_hook());
+        match Arc::try_unwrap(previous) {
+            Ok(previous) => panic::set_hook(previous),
+            Err(previous) => panic::set_hook(Box::new(move |info| previous(info))),
+        }
+    }
 }

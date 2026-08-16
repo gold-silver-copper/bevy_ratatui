@@ -8,10 +8,10 @@ pub type DefaultContext = crate::context::CrosstermContext;
 #[cfg(feature = "windowed")]
 pub type DefaultContext = crate::context::WindowedContext;
 
-/// A bevy Resource that wraps [ratatui::Terminal], setting up the terminal context when
-/// initialized (i.e. entering raw mode), restores the prior terminal state when dropped (i.e.
-/// exiting raw mode), and can be brought into Bevy systems to interact with Ratatui. For example,
-/// use this resource to draw to the terminal each frame, like the below example.
+/// A bevy Resource that wraps [ratatui::Terminal] and can be brought into Bevy systems to interact
+/// with Ratatui. [`ContextPlugin`](crate::context::ContextPlugin) owns the complete terminal
+/// lifecycle, including ordered cleanup. For example, use this resource to draw to the terminal
+/// each frame, like the below example.
 ///
 /// # Example
 ///
@@ -27,14 +27,6 @@ pub type DefaultContext = crate::context::WindowedContext;
 /// ```
 #[derive(Resource, Deref, DerefMut, Debug)]
 pub struct RatatuiContext(pub DefaultContext);
-
-impl Drop for RatatuiContext {
-    fn drop(&mut self) {
-        if let Err(err) = DefaultContext::restore() {
-            eprintln!("Failed to restore terminal: {}", err);
-        }
-    }
-}
 
 impl RatatuiContext {
     pub fn init() -> Result<Self> {
