@@ -46,6 +46,14 @@
 //!
 //! See the [examples] directory for more examples.
 //!
+//! # Terminal lifecycle
+//!
+//! With the Crossterm backend, [`RatatuiPlugins`] acquires the one process-wide terminal session
+//! before user startup systems run and stores it as [`RatatuiContext`]. That session restores raw
+//! mode, the alternate screen, and the optional modes exactly once, whether the app exits normally,
+//! the `App` is dropped, or a panic hook fires, and it reinstates the previous panic hook when the
+//! app ends normally. See `context::CrosstermSession` for the ownership model and policies.
+//!
 //! # Input Forwarding
 //!
 //! The terminal input can be forwarded to the bevy input system. See the
@@ -55,7 +63,6 @@
 //! [Ratatui]: https://ratatui.rs
 //! [examples]: https://github.com/ratatui/bevy_ratatui/tree/main/examples
 
-mod context_trait;
 #[cfg(feature = "crossterm")]
 mod crossterm_context;
 mod ratatui_context;
@@ -70,23 +77,15 @@ pub use ratatui_plugin::RatatuiPlugins;
 pub use ratatui::crossterm;
 
 pub mod context {
-    pub use super::context_trait::TerminalContext;
     #[cfg(feature = "crossterm")]
-    pub use super::crossterm_context::context::CrosstermContext;
+    pub use super::crossterm_context::session::{
+        Acquired, CrosstermSession, RestoreError, RestoreStep, SessionError, SessionOptions,
+        SetupStep,
+    };
     pub use super::ratatui_context::DefaultContext;
-    pub use super::ratatui_plugin::ContextPlugin;
+    pub use super::ratatui_plugin::{ContextPlugin, ContextSetup};
     #[cfg(feature = "windowed")]
     pub use super::windowed_context::context::WindowedContext;
-}
-
-#[cfg(feature = "crossterm")]
-pub mod cleanup {
-    pub use super::crossterm_context::cleanup::CleanupPlugin;
-}
-
-#[cfg(feature = "crossterm")]
-pub mod error {
-    pub use super::crossterm_context::error::ErrorPlugin;
 }
 
 #[cfg(feature = "crossterm")]
@@ -99,12 +98,12 @@ pub mod event {
 
 #[cfg(feature = "crossterm")]
 pub mod kitty {
-    pub use super::crossterm_context::kitty::{KittyEnabled, KittyPlugin};
+    pub use super::ratatui_plugin::KittyEnabled;
 }
 
 #[cfg(all(feature = "crossterm", feature = "mouse"))]
 pub mod mouse {
-    pub use super::crossterm_context::mouse::{MouseEnabled, MousePlugin};
+    pub use super::ratatui_plugin::MouseEnabled;
 }
 
 #[cfg(feature = "crossterm")]
