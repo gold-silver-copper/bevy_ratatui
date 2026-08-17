@@ -44,7 +44,31 @@ jobs:
       - name: cargo generate-lockfile
         run: cargo generate-lockfile
 
-      - name: cargo test --locked
+      - name: cargo test --locked (default features)
+        run: cargo test --locked --all-targets
+
+      - name: cargo test --locked (Crossterm without mouse)
+        if: matrix.toolchain == 'stable'
+        run: >-
+          cargo test --locked --no-default-features
+          --features std,async_executor,crossterm,keyboard
+          --lib --test terminal_lifecycle
+
+      - name: cargo clippy (Crossterm without mouse)
+        if: matrix.toolchain == 'stable'
+        run: >-
+          cargo clippy --locked --no-default-features
+          --features std,async_executor,crossterm,keyboard
+          --lib --test terminal_lifecycle -- -D warnings
+
+      - name: stress terminal lifecycle
+        if: matrix.toolchain == 'stable'
+        run: |
+          for iteration in $(seq 1 100); do
+            cargo test --locked --test terminal_lifecycle -- --test-threads=1
+          done
+
+      - name: cargo test --locked (all features/windowed)
         run: cargo test --locked --all-features --all-targets
 
       - name: cargo test --doc
@@ -67,8 +91,33 @@ jobs:
       - name: cargo generate-lockfile
         run: cargo generate-lockfile
 
+      - name: cargo test --locked (default features)
+        run: cargo test --locked --all-targets
+
       - name: cargo test
         run: cargo test --locked --all-features --all-targets
+
+      - name: cache cargo dependencies
+        uses: Swatinem/rust-cache@v2
+
+  windows-compile:
+    runs-on: windows-latest
+    name: windows-latest - stable (compile)
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo generate-lockfile
+        run: cargo generate-lockfile
+
+      - name: cargo check (default features)
+        run: cargo check --locked --all-targets
+
+      - name: cargo check (all features/windowed)
+        run: cargo check --locked --all-features --all-targets
 
       - name: cache cargo dependencies
         uses: Swatinem/rust-cache@v2

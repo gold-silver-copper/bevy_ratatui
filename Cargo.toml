@@ -29,6 +29,9 @@ ratatui = { version = "0.30.0", default-features = false, features = [
   "unstable-widget-ref",
 ] }
 
+[target.'cfg(unix)'.dev-dependencies]
+nix = { version = "0.30.1", features = ["process", "term"] }
+
 [[example]]
 name = "snake"
 path = "examples/snake/main.rs"

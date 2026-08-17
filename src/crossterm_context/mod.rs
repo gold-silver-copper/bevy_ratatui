@@ -1,6 +1,8 @@
-pub mod cleanup;
+#[cfg(not(feature = "windowed"))]
+pub(crate) mod cleanup;
 pub mod context;
-pub mod error;
+#[cfg(not(feature = "windowed"))]
+pub(crate) mod error;
 pub mod event;
 pub mod kitty;
 #[cfg(feature = "mouse")]

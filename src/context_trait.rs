@@ -5,19 +5,16 @@ use ratatui::{Terminal, prelude::Backend};
 
 use crate::RatatuiPlugins;
 
-/// Trait for types that implement lifecycle functions for initializing a terminal context and
-/// restoring the terminal state after exiting. Implementors must also use their implementation of
-/// the `configure_plugin_group()` function to add any systems, resources, events, etcetera
-/// necessary for the functioning of its associated Ratatui backend or its particular
-/// functionality.
+/// Trait for types that initialize a terminal context and configure its supporting plugins.
+///
+/// Implementors own any cleanup needed by the initialized context and must release it when that
+/// context is dropped. They must also use `configure_plugin_group()` to add any systems, resources,
+/// events, or other functionality needed by the associated Ratatui backend.
 pub trait TerminalContext<T: Backend + 'static>:
     Sized + Send + Sync + Deref<Target = Terminal<T>> + 'static
 {
     /// Initialize the terminal context.
     fn init() -> Result<Self>;
-
-    /// Restore the terminal to its normal state after exiting.
-    fn restore() -> Result<()>;
 
     /// Configure the plugin group to add the plugins necessary for this particular backend's
     /// functionality.
