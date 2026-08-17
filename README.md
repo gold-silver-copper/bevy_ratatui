@@ -72,8 +72,11 @@ For a larger multi-file game example, see the
 
 - `windowed`: Render your ratatui application in a window instead of the
   terminal buffer. Reference the `demo` example for how to set up a Bevy
-  project to handle either mode.
-- `serde`: Passthrough feature for serializing crossterm types.
+  project to handle either mode. This enables only the Bevy features the
+  windowed backend itself needs — windowing, rendering, and `bevy_ui`. If your
+  app also wants audio, 3D, scenes, gamepads, image codecs or the embedded
+  default font, enable those on your own `bevy` dependency; Cargo features are
+  additive.
 
 There are also a handful of features relating to running Bevy in `no_std` mode.
 
