@@ -16,7 +16,8 @@
 //!   Ratatui this crate asks for.
 //!
 //! Every page is drawn by the same single draw system, from data that ordinary Bevy systems keep
-//! in resources. The footer reports how many regions the page's layouts produced.
+//! in resources. The footer reports how many regions the page's layouts produced. It opens on the
+//! `widgets` page; Tab walks through the rest.
 //!
 //! Keys:
 //! - Tab & BackTab, or Left & Right: change page
@@ -69,7 +70,7 @@ fn main() -> Result<()> {
 }
 
 /// Which page is on screen. The tab bar is a layout region like any other.
-#[derive(Resource, Default)]
+#[derive(Resource)]
 struct Pages {
     selected: usize,
 }
@@ -77,9 +78,23 @@ struct Pages {
 impl Pages {
     const TITLES: [&'static str; 4] = ["nesting", "constraints", "flex", "widgets"];
 
+    const NESTING: usize = 0;
+    const CONSTRAINTS: usize = 1;
+    const FLEX: usize = 2;
+    /// The page the app opens on.
+    const WIDGETS: usize = 3;
+
     fn step(&mut self, delta: isize) {
         let count = Self::TITLES.len() as isize;
         self.selected = (self.selected as isize + delta).rem_euclid(count) as usize;
+    }
+}
+
+impl Default for Pages {
+    fn default() -> Self {
+        Self {
+            selected: Self::WIDGETS,
+        }
     }
 }
 
@@ -240,9 +255,9 @@ fn draw_system(
         render_tabs(frame, tabs, &pages);
 
         let mut regions = match pages.selected {
-            0 => render_nesting(frame, body, nesting.depth, ""),
-            1 => render_constraints(frame, body),
-            2 => render_flex(frame, body),
+            Pages::CONSTRAINTS => render_constraints(frame, body),
+            Pages::FLEX => render_flex(frame, body),
+            Pages::NESTING => render_nesting(frame, body, nesting.depth, ""),
             _ => render_widgets(frame, body, &animation, &mut widgets),
         };
 
@@ -274,13 +289,13 @@ fn render_footer(
     regions: usize,
 ) {
     let keys = match pages.selected {
-        0 => "tab page  +/- depth  q quit",
-        3 => "tab page  up/down select  p popup  q quit",
+        Pages::NESTING => "tab page  +/- depth  q quit",
+        Pages::WIDGETS => "tab page  up/down select  p popup  q quit",
         _ => "tab page  q quit",
     };
     frame.render_widget(Line::raw(keys), area);
 
-    let status = if pages.selected == 0 {
+    let status = if pages.selected == Pages::NESTING {
         format!(
             "{}x{}  depth {}  {regions} regions",
             terminal.width, terminal.height, nesting.depth,
