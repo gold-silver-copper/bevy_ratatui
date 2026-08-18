@@ -30,6 +30,11 @@ ratatui = { version = "0.30", default-features = false, features = [
 ] }
 
 [[example]]
+name = "demo"
+path = "examples/demo.rs"
+test = true
+
+[[example]]
 name = "snake"
 path = "examples/snake/main.rs"
 test = true
