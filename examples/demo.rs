@@ -208,7 +208,18 @@ struct ColorChangeTimer {
     start_color: Color,
 }
 
-fn start_background_color_timer(mut commands: Commands, bg_color: Res<BackgroundColor>) {
+fn start_background_color_timer(
+    mut commands: Commands,
+    bg_color: Res<BackgroundColor>,
+    existing_timers: Query<Entity, With<ColorChangeTimer>>,
+) {
+    // Replace the fade that is still in flight rather than stacking a second one onto it.
+    // `background_color_system` takes a `Single`, which matches only when exactly one timer
+    // exists, so a second one stops it running. It is also the only system that despawns
+    // finished timers, so once it stops the color stays frozen for the rest of the session.
+    for entity in &existing_timers {
+        commands.entity(entity).despawn();
+    }
     commands.spawn(ColorChangeTimer {
         timer: Timer::from_seconds(2.0, TimerMode::Once),
         start_color: bg_color.0,
@@ -268,4 +279,99 @@ fn interpolate(start: Color, end: Color, fraction: f32) -> Option<Color> {
         (start_green as f32 + (end_green as f32 - start_green as f32) * fraction) as u8,
         (start_blue as f32 + (end_blue as f32 - start_blue as f32) * fraction) as u8,
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use bevy::state::app::StatesPlugin;
+
+    use super::*;
+
+    /// Builds the counter/state/background-color half of the demo, without the systems that
+    /// need a terminal.
+    fn test_app() -> App {
+        let mut app = App::new();
+        app.add_plugins(StatesPlugin)
+            .init_resource::<Time>()
+            .init_resource::<BackgroundColor>()
+            .init_resource::<Counter>()
+            .init_state::<AppState>()
+            .add_message::<CounterMessage>()
+            .add_systems(Update, (update_counter_system, background_color_system))
+            .add_systems(OnEnter(AppState::Negative), start_background_color_timer)
+            .add_systems(OnEnter(AppState::Positive), start_background_color_timer);
+        app.update();
+        app
+    }
+
+    fn advance(app: &mut App, seconds: f32) {
+        app.world_mut()
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs_f32(seconds));
+        app.update();
+    }
+
+    fn flip(app: &mut App, message: CounterMessage) {
+        app.world_mut().write_message(message);
+        advance(app, 0.0);
+    }
+
+    fn background(app: &App) -> Color {
+        app.world().resource::<BackgroundColor>().0
+    }
+
+    fn timer_count(app: &mut App) -> usize {
+        app.world_mut()
+            .query_filtered::<Entity, With<ColorChangeTimer>>()
+            .iter(app.world())
+            .count()
+    }
+
+    const NEGATIVE: Color = Color::Rgb(191, 0, 0);
+    const POSITIVE: Color = Color::Rgb(0, 63, 128);
+
+    #[test]
+    fn fade_completes_when_left_alone() {
+        let mut app = test_app();
+        advance(&mut app, 2.5);
+        assert_eq!(background(&app), POSITIVE);
+    }
+
+    /// Regression test: flipping the sign before the previous fade finished used to leave two
+    /// `ColorChangeTimer` entities alive. `background_color_system` takes a `Single`, which
+    /// matches only when exactly one exists, so it stopped running — and because it is also the
+    /// only system that despawns finished timers, the color stayed frozen forever.
+    #[test]
+    fn flipping_sign_mid_fade_still_reaches_the_new_color() {
+        let mut app = test_app();
+        advance(&mut app, 0.5); // part-way through the initial fade to positive
+        flip(&mut app, CounterMessage::Decrement); // -1, queues the switch to Negative
+        advance(&mut app, 0.0); // the transition applies and starts the new fade
+
+        assert_eq!(
+            timer_count(&mut app),
+            1,
+            "the in-flight fade's timer was left alive alongside the new one"
+        );
+
+        advance(&mut app, 2.5);
+        assert_eq!(background(&app), NEGATIVE);
+    }
+
+    #[test]
+    fn repeated_early_flips_keep_animating() {
+        let mut app = test_app();
+        for message in [
+            CounterMessage::Decrement,
+            CounterMessage::Increment,
+            CounterMessage::Decrement,
+        ] {
+            advance(&mut app, 0.2);
+            flip(&mut app, message);
+        }
+        advance(&mut app, 2.5);
+        assert_eq!(background(&app), NEGATIVE);
+    }
 }
