@@ -66,8 +66,10 @@ map crossterm input events to normal bevy input messages.
 
 See the [demo example](examples/demo.rs) for the code and more information.
 For splitting the terminal into regions with Ratatui layouts, see the
-[layout example](examples/layout.rs). For a larger multi-file game example,
-see the [snake example](examples/snake/README.md).
+[layout example](examples/layout.rs), and the
+[layout stress test](examples/layout_test.rs) for nested layouts, every
+constraint and flex mode, and every widget. For a larger multi-file game
+example, see the [snake example](examples/snake/README.md).
 
 ## features
 
